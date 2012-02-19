@@ -1,28 +1,21 @@
-/*#ifdef _WIN32
-#include <windows.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#ifndef __APPLE__
-#include <GL/gl.h>
-#include <GL/glut.h>
-#else
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
-#endif*/
-
-#include <windows.h>
-
 #ifdef _WIN32
+#include <windows.h>
+
 #include "AR/gsub.h"
 #include "AR/video.h"
 #include "AR/param.h"
 #include "AR/ar.h"
-#else
+
+#include "GL/gl.h"
+#include "GL/glut.h"
+#else if __APPLE__
 #include <AR/gsub.h>
 #include <AR/video.h>
 #include <AR/param.h>
 #include <AR/ar.h>
+
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
 #endif
 
 //
@@ -55,7 +48,7 @@ static void   draw( void );
 
 int main(int argc, char **argv)
 {
-	//glutInit(&argc, argv);
+	glutInit(&argc, argv);
 	init();
 
     arVideoCapStart();
@@ -160,18 +153,17 @@ static void cleanup(void)
 
 static void draw( void )
 {
-    /*
-	double    gl_para[16];
+ 	double    gl_para[16];
     GLfloat   mat_ambient[]     = {0.0, 0.0, 1.0, 1.0};
     GLfloat   mat_flash[]       = {0.0, 0.0, 1.0, 1.0};
     GLfloat   mat_flash_shiny[] = {50.0};
     GLfloat   light_position[]  = {100.0,-200.0,200.0,0.0};
     GLfloat   ambi[]            = {0.1, 0.1, 0.1, 0.1};
-    GLfloat   lightZeroColor[]  = {0.9, 0.9, 0.9, 0.1};*/
+    GLfloat   lightZeroColor[]  = {0.9, 0.9, 0.9, 0.1};
     
     argDrawMode3D();
     argDraw3dCamera( 0, 0 );
-    /*glClearDepth( 1.0 );
+    glClearDepth( 1.0 );
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -195,5 +187,4 @@ static void draw( void )
     glDisable( GL_LIGHTING );
 
     glDisable( GL_DEPTH_TEST );
-	*/
 }
