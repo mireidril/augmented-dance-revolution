@@ -1,5 +1,5 @@
 #the number of patterns to be recognized
-6
+7
 
 #marker 1
 Data/multi/patt.a
@@ -48,3 +48,8 @@ Data/multi/patt.f
 1.0000 0.0000 0.0000  200.0000
 0.0000 1.0000 0.0000 -100.0000
 0.0000 0.0000 1.0000    0.0000
+
+#marker 6
+Data/multi/patt.hiro
+40.0
+0.0 0.0

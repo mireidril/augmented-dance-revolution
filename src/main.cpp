@@ -5,6 +5,7 @@
 #include "AR/video.h"
 #include "AR/param.h"
 #include "AR/ar.h"
+#include "AR/arMulti.h"
 
 #include "GL/gl.h"
 #include "GL/glut.h"
@@ -13,6 +14,7 @@
 #include <AR/video.h>
 #include <AR/param.h>
 #include <AR/ar.h>
+#include <AR/arMulti.h>
 
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
@@ -34,17 +36,23 @@ int             count = 0;
 char           *cparam_name    = "Data/camera_para.dat";
 ARParam         cparam;
 
+// NEW WAY
+//char				*config_name = "Data/multi/marker.dat";
+//ARMultiMarkerInfoT  *config;
+
+
 char           *patt_name      = "Data/patt.hiro";
 int             patt_id;
 double          patt_width     = 80.0;
 double          patt_center[2] = {0.0, 0.0};
 double          patt_trans[3][4];
 
+
 static void   init(void);
 static void   cleanup(void);
 static void   keyEvent( unsigned char key, int x, int y);
 static void   mainLoop(void);
-static void   draw( void );
+static void   draw( int item_number );
 
 int main(int argc, char **argv)
 {
@@ -72,7 +80,7 @@ static void mainLoop(void)
     ARUint8         *dataPtr;
     ARMarkerInfo    *marker_info;
     int             marker_num;
-    int             j, k;
+    int             i, j, k;
 
     /* grab a vide frame */
     if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
@@ -95,21 +103,47 @@ static void mainLoop(void)
 
     /* check for object visibility */
     k = -1;
+	
     for( j = 0; j < marker_num; j++ ) {
         if( patt_id == marker_info[j].id ) {
             if( k == -1 ) k = j;
             else if( marker_info[k].cf < marker_info[j].cf ) k = j;
         }
     }
+	/* check for object visibility */
+	/* NEW WAY
+	for( i = 0; i < config->marker_num; i++ ) {
+		k = -1;
+		for( j = 0; j < marker_num; j++ ) {
+			if( config->marker[i].patt_id == marker_info[j].id ) {
+				if( k == -1 ) k = j;
+				else if( marker_info[k].cf < marker_info[j].cf ) k = j;
+			}
+		}
+
+		if( k == -1 ) {
+			config->marker[i].visible = 0;
+			continue;
+		}
+
+		config->marker[i].visible = 1;
+		arGetTransMat(&marker_info[k],
+		config->marker[i].center, config->marker[i].width,
+		config->marker[i].trans);
+
+		draw( i );
+	}
+
+
     if( k == -1 ) {
         argSwapBuffers();
         return;
     }
-
+	*/
     /* get the transformation between the marker and the real camera */
     arGetTransMat(&marker_info[k], patt_center, patt_width, patt_trans);
 
-    draw();
+    draw(0);
 
     argSwapBuffers();
 }
@@ -133,11 +167,16 @@ static void init( void )
     arInitCparam( &cparam );
     printf("*** Camera Parameter ***\n");
     arParamDisp( &cparam );
-
+	/* New way multiple patterns
+	if( (config = arMultiReadConfigFile(config_name)) == NULL ) {
+        printf("config data load error !!\n");
+        exit(0);
+    }*/
+	// One pattern old way 
     if( (patt_id=arLoadPatt(patt_name)) < 0 ) {
         printf("pattern load error !!\n");
         exit(0);
-    }
+    } //*/
 
     /* open the graphics window */
     argInit( &cparam, 1.0, 0, 0, 0, 0 );
@@ -151,7 +190,7 @@ static void cleanup(void)
     argCleanup();
 }
 
-static void draw( void )
+static void draw( int item_number )
 {
  	double    gl_para[16];
     GLfloat   mat_ambient[]     = {0.0, 0.0, 1.0, 1.0};
@@ -169,6 +208,8 @@ static void draw( void )
     glDepthFunc(GL_LEQUAL);
     
     // load the camera transformation matrix
+	// NEW WAY
+	//argConvGlpara(config->marker[item_number].trans, gl_para);
     argConvGlpara(patt_trans, gl_para);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixd( gl_para );
