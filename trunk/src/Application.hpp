@@ -38,6 +38,7 @@ const int				m_thresh = 50;
 int						m_Xsize, m_Ysize;
 ARMultiMarkerInfoT *	m_config;
 GLuint*					m_texturesIds;
+GLuint					m_text1;
 int						m_nbImages;
 enum Marker {C, B, SR, SL, FR, BR, FL, BL};
 typedef struct  {
@@ -248,7 +249,7 @@ void update()
 	arVideoCapNext();
     render();
 	drawText(m_Xsize, m_Ysize, 100, GLUT_BITMAP_TIMES_ROMAN_24, "HEllo!");
-	//drawImage(0, m_Xsize/2, m_Ysize/2, 30);
+	drawImage(0, m_Xsize/2, m_Ysize/2, 30);
 
     argSwapBuffers();
 }
@@ -339,12 +340,32 @@ void drawImage(int id, float x, float y, float z)
 {
 	if(id < m_nbImages)
 	{
+		/*glEnable(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+		//glTranslatef( x, y, z);
+		glColor4f(1.f,1.f,0.f, 1.f);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
+		glBegin(GL_QUADS);
+			glTexCoord2d(0,1); glVertex3d(0,100,1);
+			glTexCoord2d(1,1); glVertex3d(100,100,1);
+			glTexCoord2d(1,0); glVertex3d(100,0,1);
+			glTexCoord2d(0,0); glVertex3d(0,0,1);
+		glEnd();
+		*/
+
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
-		glTranslatef( x, y, z);
-		//glColor4f(1.f,1.f,1.f, 1.f);
-		glutSolidCube(60);
+		glBindTexture(GL_TEXTURE_2D, m_text1);
+		glBegin(GL_QUADS);
+		glTexCoord2i(0,0);
+		glVertex3i(-100,-100,-1);
+		glTexCoord2i(10,0);
+		glVertex3i(100,-100,-1);
+		glTexCoord2i(10,10);
+		glVertex3i(100,100,-1);
+		glTexCoord2i(0,10);
+		glVertex3i(-100,100,-1);
+		glEnd();
 	}
 }
 
@@ -367,13 +388,14 @@ void loadImage(const char * filename, int id)
 	if(id < m_nbImages)
 	{
 		glGenTextures(1, &m_texturesIds[id]);
-		glBindTexture(GL_TEXTURE_2D, m_texturesIds[0]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
 		
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_surface->w, picture_surface->h, 0, GL_RGB, GL_UNSIGNED_BYTE, picture_surface->pixels);
+		std::cout<<picture_surface->w<<" "<<picture_surface->h<<std::endl;
 	}
 
 	SDL_FreeSurface(picture_surface);
