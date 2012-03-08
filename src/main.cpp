@@ -9,8 +9,6 @@
 
 #include "GL/gl.h"
 #include "GL/glut.h"
-
-#include "SDL/SDL_mixer.h"
 #else if __APPLE__
 #include <AR/gsub.h>
 #include <AR/video.h>
@@ -20,11 +18,7 @@
 
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
-
-#include <SDL/SDL_mixer.h>
 #endif
-
-#include <iostream>
 
 //
 // Camera configuration.
@@ -42,45 +36,24 @@ int             count = 0;
 char           *cparam_name    = "Data/camera_para.dat";
 ARParam         cparam;
 
-// NEW WAY
-//char				*config_name = "Data/multi/marker.dat";
-//ARMultiMarkerInfoT  *config;
-
-
-char           *patt_name      = "Data/patt.hiro";
-int             patt_id;
-double          patt_width     = 80.0;
-double          patt_center[2] = {0.0, 0.0};
-double          patt_trans[3][4];
-
+char				*config_name = "Data/multi/marker.dat";
+ARMultiMarkerInfoT  *config;
 
 static void   init(void);
 static void   cleanup(void);
 static void   keyEvent( unsigned char key, int x, int y);
 static void   mainLoop(void);
-static void   draw( int item_number );
+static void   draw();
+static int  draw_object( int obj_id, double gl_para[16]);
 
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 	init();
 
-	//Test son !
-	//SDL_mixer
-	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
-		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
-	Mix_Music * musique = Mix_LoadMUS("../musics/fanfare.ogg");
-	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
-	if(musique == NULL){
-		std::cout<<"musique non jouée"<<std::endl;
-	}
-	else
-	{
-		Mix_PlayMusic(musique, -1);
-	}
-
     arVideoCapStart();
     argMainLoop( NULL, keyEvent, mainLoop );
+	system("PAUSE");
 	return (0);
 }
 
@@ -116,26 +89,21 @@ static void mainLoop(void)
     /* detect the markers in the video frame */
     if( arDetectMarker(dataPtr, thresh, &marker_info, &marker_num) < 0 ) {
         cleanup();
+		system("PAUSE");
         exit(0);
     }
 
-    arVideoCapNext();
-
-    /* check for object visibility */
-    k = -1;
-	
-    for( j = 0; j < marker_num; j++ ) {
-        if( patt_id == marker_info[j].id ) {
-            if( k == -1 ) k = j;
-            else if( marker_info[k].cf < marker_info[j].cf ) k = j;
-        }
-    }
+   
 	/* check for object visibility */
-	/* NEW WAY
+	// NEW WAY
 	for( i = 0; i < config->marker_num; i++ ) {
 		k = -1;
 		for( j = 0; j < marker_num; j++ ) {
 			if( config->marker[i].patt_id == marker_info[j].id ) {
+				/* you've found a pattern */
+				//printf("Found pattern: %d ",config->marker[i].patt_id);
+				glColor3f( 0.0, 1.0, 0.0 );
+				argDrawSquare(marker_info[j].vertex,0,0);
 				if( k == -1 ) k = j;
 				else if( marker_info[k].cf < marker_info[j].cf ) k = j;
 			}
@@ -146,24 +114,23 @@ static void mainLoop(void)
 			continue;
 		}
 
-		config->marker[i].visible = 1;
-		arGetTransMat(&marker_info[k],
-		config->marker[i].center, config->marker[i].width,
-		config->marker[i].trans);
-
-		draw( i );
+		/* calculate the transform for each marker */
+		if( config->marker[i].visible == 0 ) {
+            arGetTransMat(&marker_info[k],
+                          config->marker[i].center, config->marker[i].width,
+                          config->marker[i].trans);
+        }
+        else {
+            arGetTransMatCont(&marker_info[k], config->marker[i].trans,
+				config->marker[i].center, config->marker[i].width,
+                          config->marker[i].trans);
+        }
+        config->marker[i].visible = 1;
+		
 	}
 
-
-    if( k == -1 ) {
-        argSwapBuffers();
-        return;
-    }
-	*/
-    /* get the transformation between the marker and the real camera */
-    arGetTransMat(&marker_info[k], patt_center, patt_width, patt_trans);
-
-    draw(0);
+	arVideoCapNext();
+    draw();
 
     argSwapBuffers();
 }
@@ -187,16 +154,13 @@ static void init( void )
     arInitCparam( &cparam );
     printf("*** Camera Parameter ***\n");
     arParamDisp( &cparam );
-	/* New way multiple patterns
+
+	// New way multiple patterns
 	if( (config = arMultiReadConfigFile(config_name)) == NULL ) {
         printf("config data load error !!\n");
+		system("PAUSE");
         exit(0);
-    }*/
-	// One pattern old way 
-    if( (patt_id=arLoadPatt(patt_name)) < 0 ) {
-        printf("pattern load error !!\n");
-        exit(0);
-    } //*/
+    }
 
     /* open the graphics window */
     argInit( &cparam, 1.0, 0, 0, 0, 0 );
@@ -210,42 +174,72 @@ static void cleanup(void)
     argCleanup();
 }
 
-static void draw( int item_number )
+/* draw the the AR objects */
+static void draw()
 {
- 	double    gl_para[16];
-    GLfloat   mat_ambient[]     = {0.0, 0.0, 1.0, 1.0};
-    GLfloat   mat_flash[]       = {0.0, 0.0, 1.0, 1.0};
+    int     i;
+    double  gl_para[16];
+       
+	glClearDepth( 1.0 );
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_LIGHTING);
+
+    /* calculate the viewing parameters - gl_para */
+	for( i = 0; i < config->marker_num; i++ ) {
+        if( config->marker[i].visible == 0 ) continue;
+        argConvGlpara(config->marker[i].trans, gl_para);
+		draw_object( config->marker[i].patt_id, gl_para);
+    }
+     
+	glDisable( GL_LIGHTING );
+    glDisable( GL_DEPTH_TEST );
+	
+}
+
+/* draw the user object */
+static int  draw_object( int obj_id, double gl_para[16])
+{
+    GLfloat   mat_ambient[]				= {0.0, 0.0, 1.0, 1.0};
+	GLfloat   mat_ambient_collide[]     = {1.0, 0.0, 0.0, 1.0};
+    GLfloat   mat_flash[]				= {0.0, 0.0, 1.0, 1.0};
+	GLfloat   mat_flash_collide[]       = {1.0, 0.0, 0.0, 1.0};
     GLfloat   mat_flash_shiny[] = {50.0};
     GLfloat   light_position[]  = {100.0,-200.0,200.0,0.0};
     GLfloat   ambi[]            = {0.1, 0.1, 0.1, 0.1};
     GLfloat   lightZeroColor[]  = {0.9, 0.9, 0.9, 0.1};
-    
+ 
     argDrawMode3D();
     argDraw3dCamera( 0, 0 );
-    glClearDepth( 1.0 );
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    
-    // load the camera transformation matrix
-	// NEW WAY
-	//argConvGlpara(config->marker[item_number].trans, gl_para);
-    argConvGlpara(patt_trans, gl_para);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixd( gl_para );
 
+ 	/* set the material */
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambi);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightZeroColor);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_flash);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_flash_shiny);	
-    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-    glMatrixMode(GL_MODELVIEW);
-    glTranslatef( 0.0, 0.0, 25.0 );
-    glutSolidCube(50.0);
-    glDisable( GL_LIGHTING );
 
-    glDisable( GL_DEPTH_TEST );
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_flash_shiny);	
+
+	if(obj_id == 0){
+		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_flash_collide);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_collide);
+		/* draw a cube */
+		glTranslatef( 0.0, 0.0, 30.0 );
+		glutSolidSphere(30,12,6);
+	}
+	else {
+		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_flash);
+		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+		/* draw a cube */
+		glTranslatef( 0.0, 0.0, 30.0 );
+		glutSolidCube(60);
+	}
+
+    argDrawMode2D();
+
+    return 0;
 }
