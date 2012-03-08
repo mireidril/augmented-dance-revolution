@@ -33,6 +33,7 @@ if( MSVC )
 			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcr71d.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcp71d.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/glut32.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/SDL.dll
 			DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 		if(32BITS)
 			file(COPY ${CMAKE_SOURCE_DIR}/dependencies/dll/x86/libARvideod.dll 
