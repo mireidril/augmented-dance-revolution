@@ -12,6 +12,7 @@
 
 #include "GL/gl.h"
 #include "GL/glut.h"
+#include "time.h"
 
 #include "SDL/SDL_mixer.h"
 #include "SDL/SDL_image.h"
@@ -39,6 +40,25 @@ ARMultiMarkerInfoT *	m_config;
 GLuint*					m_texturesIds;
 int						m_nbImages;
 enum Marker {C, B, SR, SL, FR, BR, FL, BL};
+typedef struct  {
+	unsigned int  patt1;
+	unsigned int  patt2;
+	unsigned int  patt3;
+	unsigned int  patt4;
+	unsigned int  patt5;
+	unsigned int  patt6;
+	unsigned int  patt7;
+	unsigned int  patt8;
+	
+	}position;
+
+position pos[123*4];
+unsigned int bar, beat;
+clock_t			start, end;
+double			elapsed;
+const double BPM_96 =  625;
+const double BPM_156 = 384;
+double deltaTime;
 
 //Functions
 void cleanUp();
@@ -64,6 +84,7 @@ void cleanUp()
 
 void init(int argc, char **argv)
 {
+	
 	//Glut init
 	glutInit(&argc, argv);
 	
@@ -106,6 +127,28 @@ void init(int argc, char **argv)
 
     /* open the graphics window */
     argInit( &cparam, 1.0, 0.0, 0, 0, 0 );
+
+	//sound init
+	bar = 0;
+	beat = 0;
+	deltaTime = BPM_96;
+	
+
+	//Test son !
+	//SDL_mixer
+	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
+		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
+	Mix_Music * musique = Mix_LoadMUS("../musics/queen.ogg");
+	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+	if(musique == NULL){
+		std::cout<<"musique non jouée"<<std::endl;
+	}
+	else
+	{
+		Mix_PlayMusic(musique, -1);
+	}
+
+	start = clock();
 }
 
 void run()
@@ -117,6 +160,25 @@ void run()
 
 void update()
 {
+
+	 end = clock();
+     elapsed = ((double)end - start);
+
+	 if(elapsed >= deltaTime){
+		 
+		 beat++;
+		 if(beat == 5){
+			 bar++;
+			 beat=1;
+		 }
+
+		 if(bar == 13) deltaTime = BPM_156;
+
+		 std::cout << "mesure " << bar;
+		 std::cout << "beat " << beat << std::endl;
+		 start = end;
+	 }
+
 	ARUint8         *dataPtr;
     ARMarkerInfo    *marker_info;
     int             marker_num;
@@ -192,7 +254,8 @@ void update()
 }
 
 void render()
-{
+{ 
+
 	int     i;
     double  gl_para[16];
        
