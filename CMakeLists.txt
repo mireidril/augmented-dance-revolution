@@ -33,7 +33,9 @@ if( MSVC )
 			${CMAKE_SOURCE_DIR}/dependencies/dll/DSVLd.dll
 			DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 		else()
-			file(COPY ${CMAKE_SOURCE_DIR}/dependencies/dll/x64/libARvideod.dll 
+			file(COPY ${CMAKE_SOURCE_DIR}/dependencies/dll/x64/libARvideod.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcr71d.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcp71.dll				
 			${CMAKE_SOURCE_DIR}/dependencies/dll/DSVLd.dll
 			DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 		endif()
