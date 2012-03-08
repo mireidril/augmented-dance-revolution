@@ -14,6 +14,7 @@
 #include "GL/glut.h"
 
 #include "SDL/SDL_mixer.h"
+#include "SDL/SDL_image.h"
 #endif
 #if __APPLE__
 #include <AR/gsub.h>
@@ -33,10 +34,10 @@
 
 //Variables
 const int				m_thresh = 50;
-//Size of the windows
 int						m_Xsize, m_Ysize;
 ARMultiMarkerInfoT *	m_config;
-
+GLuint*					m_texturesIds;
+int						m_nbImages;
 enum Marker {C, B, SR, SL, FR, BR, FL, BL};
 
 //Functions
@@ -47,8 +48,11 @@ void update();
 void render();
 
 void drawObject(int obj_id, double gl_para[16]);
+void drawText(float x, float y, float z, void* font, const char* s);
+void drawImage(int id, float x, float y, float z);
 
 void keyEvent(unsigned char key, int x, int y);
+void loadImage(const char * filename, int id);
 
 //Functions definitions
 void cleanUp()
@@ -69,6 +73,11 @@ void init(int argc, char **argv)
 		char *vconf = "";
 	#endif
 
+	//Init textures
+	m_nbImages = 1;
+	m_texturesIds = new GLuint[m_nbImages];
+	loadImage("../images/test.jpg", 0);
+
 	ARParam  wparam;
     /* open the video path */
     if( arVideoOpen( vconf ) < 0 ) exit(0);
@@ -78,11 +87,11 @@ void init(int argc, char **argv)
 
     /* set the initial camera parameters */
 	char *cparam_name = "Data/camera_para.dat";
-	ARParam cparam;
-    if( arParamLoad(cparam_name, 1, &wparam) < 0 ) {
+	if( arParamLoad(cparam_name, 1, &wparam) < 0 ) {
         printf("Camera parameter load error !!\n");
         exit(0);
     }
+	ARParam cparam;
     arParamChangeSize( &wparam, m_Xsize, m_Ysize, &cparam );
     arInitCparam( &cparam );
     printf("*** Camera Parameter ***\n");
@@ -96,15 +105,12 @@ void init(int argc, char **argv)
     }
 
     /* open the graphics window */
-    argInit( &cparam, 1.0, 0, 0, 0, 0 );
+    argInit( &cparam, 1.0, 0.0, 0, 0, 0 );
 }
 
 void run()
 {
 	arVideoCapStart();
-
-	//Keyboard events function
-	glutKeyboardFunc(keyEvent);
 
     argMainLoop( NULL, keyEvent, update );
 }
@@ -179,6 +185,8 @@ void update()
 
 	arVideoCapNext();
     render();
+	drawText(m_Xsize, m_Ysize, 100, GLUT_BITMAP_TIMES_ROMAN_24, "HEllo!");
+	//drawImage(0, m_Xsize/2, m_Ysize/2, 30);
 
     argSwapBuffers();
 }
@@ -193,6 +201,7 @@ void render()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_LIGHTING);
+	glPushMatrix();
 
     /* calculate the viewing parameters - gl_para */
 	for( i = 0; i < m_config->marker_num; i++ ) {
@@ -200,7 +209,7 @@ void render()
         argConvGlpara(m_config->marker[i].trans, gl_para);
 		drawObject( m_config->marker[i].patt_id, gl_para);
     }
-     
+    glPopMatrix();
 	glDisable( GL_LIGHTING );
     glDisable( GL_DEPTH_TEST );
 }
@@ -241,11 +250,39 @@ void drawObject(int obj_id, double gl_para[16])
 		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_flash);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 		/* draw a cube */
-		glTranslatef( 0.0, 0.0, 30.0 );
-		glutSolidCube(60);
+		glTranslatef( 0.0, 0.0, 1 );
+		glutSolidCube(120);
 	}
 
     argDrawMode2D();
+}
+
+void drawText(float x, float y, float z, void* font, const char* s)
+{
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+
+	glColor4f(1.f,1.f,1.f, 1.f);
+    glRasterPos2f(x, y);
+
+    while(*s)
+    {
+        glutBitmapCharacter(font, *s);
+        s++;
+    }
+}
+
+void drawImage(int id, float x, float y, float z)
+{
+	if(id < m_nbImages)
+	{
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
+		glTranslatef( x, y, z);
+		//glColor4f(1.f,1.f,1.f, 1.f);
+		glutSolidCube(60);
+	}
 }
 
 void keyEvent(unsigned char key, int x, int y)
@@ -254,6 +291,29 @@ void keyEvent(unsigned char key, int x, int y)
 	{
 		exit(0);
 	}
+}
+
+void loadImage(const char * filename, int id)
+{
+    SDL_Surface * picture_surface = NULL;
+
+    picture_surface = IMG_Load(filename);
+    if (picture_surface == NULL)
+        std::cout<<"ERRREUREURUERUE"<<std::endl;
+
+	if(id < m_nbImages)
+	{
+		glGenTextures(1, &m_texturesIds[id]);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_surface->w, picture_surface->h, 0, GL_RGB, GL_UNSIGNED_BYTE, picture_surface->pixels);
+	}
+
+	SDL_FreeSurface(picture_surface);
 }
 
 #endif //__APPLICATION_HPP__
