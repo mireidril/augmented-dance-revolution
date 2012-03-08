@@ -32,10 +32,12 @@
 #include <iostream>
 
 //Variables
-const int				m_thresh = 100;
+const int				m_thresh = 50;
 //Size of the windows
 int						m_Xsize, m_Ysize;
 ARMultiMarkerInfoT *	m_config;
+
+enum Marker {C, B, SR, SL, FR, BR, FL, BL};
 
 //Functions
 void cleanUp();
@@ -136,7 +138,18 @@ void update()
 		for( j = 0; j < marker_num; j++ ) {
 			if( m_config->marker[i].patt_id == marker_info[j].id ) {
 				/* you've found a pattern */
-				//printf("Found pattern: %d ",config->marker[i].patt_id);
+				printf("Found pattern: %d ", m_config->marker[i].patt_id);
+				switch(m_config->marker[i].patt_id){
+					case C: printf("Chest"); break;
+					case B: printf("Back"); break;
+					case SR: printf("Shoulder Right"); break;
+					case SL: printf("Shoulder Left"); break;
+					case FR: printf("Hand Right Front"); break;
+					case BR: printf("Hand Right Back"); break;
+					case FL: printf("Hand Left Front"); break;
+					case BL: printf("Hand Left Back"); break;
+				};
+				printf("\n");
 				glColor3f( 0.0, 1.0, 0.0 );
 				argDrawSquare(marker_info[j].vertex,0,0);
 				if( k == -1 ) k = j;
