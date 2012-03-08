@@ -29,6 +29,7 @@ if( MSVC )
 		
 		# copy WIN32 DLLs 
 		file(COPY ${CMAKE_SOURCE_DIR}/dependencies/dll/DSVLd.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/SDL_mixer.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcr71d.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcp71d.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/glut32.dll
@@ -50,6 +51,7 @@ if( MSVC )
 	target_link_libraries(AugmentedDanceRevolution optimized libARvideo debug libARvideod)
 	target_link_libraries(AugmentedDanceRevolution optimized libARgsub debug libARgsubd)
 	target_link_libraries(AugmentedDanceRevolution optimized libARMulti debug libARMultid)
+	target_link_libraries(AugmentedDanceRevolution SDL_mixer)
 	target_link_libraries(AugmentedDanceRevolution opengl32)
 	target_link_libraries(AugmentedDanceRevolution glut32)
 endif()
