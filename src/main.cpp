@@ -9,6 +9,8 @@
 
 #include "GL/gl.h"
 #include "GL/glut.h"
+
+#include "SDL/SDL_mixer.h"
 #else if __APPLE__
 #include <AR/gsub.h>
 #include <AR/video.h>
@@ -18,7 +20,11 @@
 
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
+
+#include <SDL/SDL_mixer.h>
 #endif
+
+#include <iostream>
 
 //
 // Camera configuration.
@@ -58,6 +64,20 @@ int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 	init();
+
+	//Test son !
+	//SDL_mixer
+	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
+		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
+	Mix_Music * musique = Mix_LoadMUS("../musics/fanfare.ogg");
+	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+	if(musique == NULL){
+		std::cout<<"musique non jouée"<<std::endl;
+	}
+	else
+	{
+		Mix_PlayMusic(musique, -1);
+	}
 
     arVideoCapStart();
     argMainLoop( NULL, keyEvent, mainLoop );
