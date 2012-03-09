@@ -147,7 +147,7 @@ void init(int argc, char **argv)
 	}
 	else
 	{
-		Mix_PlayMusic(musique, -1);
+		//Mix_PlayMusic(musique, -1);
 	}
 
 	start = clock();
@@ -246,17 +246,33 @@ void update()
     int             marker_num;
     int             i, j, k;
 
-    /* grab a vide frame */
+    // grab a vide frame
     if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
         arUtilSleep(2);
         return;
     }
 
-    argDrawMode2D();
-    argDispImage( dataPtr, 0, 0 );
+	//mirror the image camera
+	int sizeX, sizeY;
+	arVideoInqSize(&sizeX, &sizeY);
+	ARUint8 * dataPtrFlipped = new ARUint8[sizeX*sizeY*AR_PIX_SIZE_DEFAULT];
+	
+	for(int i = 0; i < sizeY; ++i)
+	{
+		for(int j = 0, k = (sizeX * AR_PIX_SIZE_DEFAULT) - AR_PIX_SIZE_DEFAULT; j < sizeX * AR_PIX_SIZE_DEFAULT; j += AR_PIX_SIZE_DEFAULT, k-=AR_PIX_SIZE_DEFAULT)
+		{
+			dataPtrFlipped[i*sizeX * AR_PIX_SIZE_DEFAULT + j + 0] = dataPtr[i*sizeX * AR_PIX_SIZE_DEFAULT + k + 0];
+			dataPtrFlipped[i*sizeX * AR_PIX_SIZE_DEFAULT + j + 1] = dataPtr[i*sizeX * AR_PIX_SIZE_DEFAULT + k + 1];
+			dataPtrFlipped[i*sizeX * AR_PIX_SIZE_DEFAULT + j + 2] = dataPtr[i*sizeX * AR_PIX_SIZE_DEFAULT + k + 2];
+			dataPtrFlipped[i*sizeX * AR_PIX_SIZE_DEFAULT + j + 3] = dataPtr[i*sizeX * AR_PIX_SIZE_DEFAULT + k + 3];
+		}
+	}
 
-    /* detect the markers in the video frame */
-    if( arDetectMarker(dataPtr, m_thresh, &marker_info, &marker_num) < 0 ) {
+    argDrawMode2D();
+    argDispImage( dataPtrFlipped, 0, 0 );
+
+    // detect the markers in the video frame 
+    if( arDetectMarker(dataPtrFlipped, m_thresh, &marker_info, &marker_num) < 0 ) {
 		exit(0);
     }
 
@@ -311,6 +327,7 @@ void update()
     render();
 
     argSwapBuffers();
+	delete []dataPtrFlipped;
 }
 
 void render()
@@ -399,7 +416,8 @@ void drawText(float x, float y, float z, void* font, const char* s)
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
 
-	glColor4f(1.f,1.f,1.f, 1.f);
+	glColor4f(1.f,0.f,1.f, 1.f);
+	glScalef( 10, 10, 10 );
     glRasterPos2f(x, y);
 
     while(*s)
