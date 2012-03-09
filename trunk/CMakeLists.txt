@@ -34,6 +34,8 @@ if( MSVC )
 			${CMAKE_SOURCE_DIR}/dependencies/dll/msvcp71d.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/glut32.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/SDL_image.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/SDL_gfx.dll
+			${CMAKE_SOURCE_DIR}/dependencies/dll/SDL_ttf.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/jpeg.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/libpng1.dll
 			${CMAKE_SOURCE_DIR}/dependencies/dll/zlib.dll
@@ -58,6 +60,8 @@ if( MSVC )
 	target_link_libraries(AugmentedDanceRevolution optimized libARMulti debug libARMultid)
 	target_link_libraries(AugmentedDanceRevolution SDL_mixer)
 	target_link_libraries(AugmentedDanceRevolution SDL_image)
+	target_link_libraries(AugmentedDanceRevolution SDL_gfx)
+	target_link_libraries(AugmentedDanceRevolution SDL_ttf)
 	target_link_libraries(AugmentedDanceRevolution SDLmain)
 	target_link_libraries(AugmentedDanceRevolution SDL)
 	target_link_libraries(AugmentedDanceRevolution opengl32)
