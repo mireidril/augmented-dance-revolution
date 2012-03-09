@@ -66,7 +66,7 @@ class Application
 		void render();
 
 		//Dessine une image à la position du marqueur idMarker
-		void drawObject(int idMarker);
+		void drawMarker(int idMarker);
 		//Dessine le texte s à la position (x, y) de la fenêtre
 		void drawText(int x, int y, SDL_Color color, char* s);
 		//Dessine l'image id à la position (x, y) de la fenêtre

@@ -364,7 +364,7 @@ void Application::render()
         if( m_config->marker[i].visible == 1 )
 		{
 			//argConvGlpara(m_config->marker[i].trans, gl_para);
-			drawObject(i);
+			drawMarker(i);
 		}
     }
 
@@ -381,18 +381,21 @@ void Application::render()
 }
 
 //Dessine une image à la position du marqueur idMarker
-void Application::drawObject(int idMarker)
+void Application::drawMarker(int idMarker)
 {
 	//Récupération des coordonnées du marqueur sur l'image
 	SDL_Rect pos;
-	pos.x = m_config->marker[idMarker].trans[2][0];
-	pos.y = m_config->marker[idMarker].trans[2][1];
-	int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
-	int maxZ = 1500;
-	double rapport = (maxZ-z)/maxZ;
+	pos.x = m_config->marker[idMarker].trans[2][0] * m_windowsWidth + m_windowsWidth/2;
+	pos.y = m_config->marker[idMarker].trans[2][1] * m_windowsHeight + m_windowsHeight/2;
+	
+	//int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
+	//int maxZ = 1500;
+	//double rapport = (maxZ-z)/maxZ;
 
-	float zoomX = (float) (m_images[0]->m_size->x * rapport) / m_images[0]->m_size->x;
-	float zoomY = (float) (m_images[0]->m_size->y * rapport) / m_images[0]->m_size->y;
+	//float zoomX = (float) (m_images[0]->m_size->x * rapport) / m_images[0]->m_size->x;
+	//float zoomY = (float) (m_images[0]->m_size->y * rapport) / m_images[0]->m_size->y;
+	float zoomX = (float) (m_images[0]->m_drawingSize->x * 2 ) / m_images[0]->m_size->x;
+	float zoomY = (float) (m_images[0]->m_drawingSize->y * 2) / m_images[0]->m_size->y;
 	
 	SDL_Surface * img = rotozoomSurfaceXY(m_images[0]->m_image, 0.0f, zoomX, zoomY, 1);
 	SDL_BlitSurface(img, NULL, m_screen, &pos);
