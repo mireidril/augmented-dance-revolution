@@ -85,7 +85,7 @@ void drawObject(int obj_id, double gl_para[16]);
 //Dessine le texte s à la position (x, y, z) de la fenêtre
 void drawText(float x, float y, float z, void* font, const char* s);
 //Dessine l'image id à la position (x, y, z) de la fenêtre
-void drawImage(int id, float x, float y, float z);
+void drawImage(int id, float x, float y, float z, int size);
 
 //Gère les évènements clavier de l'application
 void keyEvent(unsigned char key, int x, int y);
@@ -157,7 +157,7 @@ void initImages()
 {
 	m_nbImages = 1;
 	m_texturesIds = new GLuint[m_nbImages];
-	loadImage("../images/test2.jpg", 0);
+	loadImage("../images/test.jpg", 0);
 }
 
 void loadImage(const char * filename, int id)
@@ -309,8 +309,6 @@ void update()
 
 	arVideoCapNext();
     render();
-	drawText(m_Xsize, m_Ysize, 100, GLUT_BITMAP_TIMES_ROMAN_24, "HEllo!");
-	//drawImage(0, m_Xsize, m_Ysize, 10);
 
     argSwapBuffers();
 }
@@ -336,6 +334,9 @@ void render()
     glPopMatrix();
 	glDisable( GL_LIGHTING );
     glDisable( GL_DEPTH_TEST );
+
+	drawText(m_Xsize, m_Ysize, 100, GLUT_BITMAP_TIMES_ROMAN_24, "HEllo!");
+	//drawImage(0, 600, 500, 0, 200);
 }
 
 
@@ -408,43 +409,25 @@ void drawText(float x, float y, float z, void* font, const char* s)
     }
 }
 
-void drawImage(int id, float x, float y, float z)
+void drawImage(int id, float x, float y, float z, int size)
 {
 	if(id < m_nbImages)
 	{
-		/*glEnable(GL_TEXTURE_2D);
-		glEnable(GL_DEPTH_TEST);
-		glTranslatef(x, y, z);
-		glColor4f(1.f, 1.f,0.f, 1.f);
-		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
-		glBegin(GL_QUADS);
-			glTexCoord2d(0,1); glVertex3d(0,10,1);
-			glTexCoord2d(1,1); glVertex3d(10,10,1);
-			glTexCoord2d(1,0); glVertex3d(10,0,1);
-			glTexCoord2d(0,0); glVertex3d(0,0,1);
-		glEnd();*/
-
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTranslatef(x, y, z);
-		glScalef(20, 20, 20);
+		glTranslatef(x + size/2, y + size/2, z);
 		glBegin(GL_QUADS);
-			/*glTexCoord2i(0, 0);
-			glVertex3i(50, -50,-1);
+			glTexCoord2i(0, 0);
+			glVertex3i(size/2, -size/2,-1);
 			glTexCoord2i(0,1);
-			glVertex3i(50,50,-1);
+			glVertex3i(size/2,size/2,-1);
 			glTexCoord2i(1,1);
-			glVertex3i(-50,50,-1);
+			glVertex3i(-size/2,size/2,-1);
 			glTexCoord2i(1,0);
-			glVertex3i(-50,-50,-1);*/
-
-			glTexCoord2d(0,1);  glVertex3d(1,-1,1);
-			glTexCoord2d(0,0);  glVertex3d(1,-1,-1);
-			glTexCoord2d(1,0);  glVertex3d(-1,-1,-1);
-			glTexCoord2d(1,1);  glVertex3d(-1,-1,1);
+			glVertex3i(-size/2,-size/2,-1);
 		glEnd();
 	}
 }
