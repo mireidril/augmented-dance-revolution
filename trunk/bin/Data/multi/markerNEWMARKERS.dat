@@ -2,7 +2,7 @@
 8
 
 #marker 0, chest
-Data/multi/patt.c
+Data/multi/patt.heart
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -10,7 +10,7 @@ Data/multi/patt.c
 0.0000 0.0000 1.0000 0.0000
 
 #marker 1, back
-Data/multi/patt.b
+Data/multi/patt.star
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -18,7 +18,7 @@ Data/multi/patt.b
 0.0000 0.0000 1.0000 0.0000
 
 #marker 2, shoulder right
-Data/multi/patt.sr
+Data/multi/patt.aule
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -26,7 +26,7 @@ Data/multi/patt.sr
 0.0000 0.0000 1.0000 0.0000
 
 #marker 3, shoulder left
-Data/multi/patt.sl
+Data/multi/patt.ep
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -34,7 +34,7 @@ Data/multi/patt.sl
 0.0000 0.0000 1.0000 0.0000
 
 #marker 4, hand front right 
-Data/multi/patt.fr
+Data/multi/patt.droi
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -42,7 +42,7 @@ Data/multi/patt.fr
 0.0000 0.0000 1.0000 0.0000
 
 #marker 5, hand back right
-Data/multi/patt.br
+Data/multi/patt.te
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -50,7 +50,7 @@ Data/multi/patt.br
 0.0000 0.0000 1.0000 0.0000
 
 #marker 6, hand front left
-Data/multi/patt.fl
+Data/multi/patt.gau
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
@@ -58,7 +58,7 @@ Data/multi/patt.fl
 0.0000 0.0000 1.0000 0.0000
 
 #marker 7, hand back left
-Data/multi/patt.bl
+Data/multi/patt.che
 80.0
 0.0 0.0
 1.0000 0.0000 0.0000 0.0000
