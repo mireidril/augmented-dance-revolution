@@ -3,6 +3,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "vector"
 
 #include "AR/gsub.h"
 #include "AR/video.h"
@@ -41,25 +42,23 @@ ARMultiMarkerInfoT *	m_config;
 GLuint*					m_texturesIds;
 GLuint					m_text1;
 int						m_nbImages;
-enum Marker {C, B, SR, SL, FR, BR, FL, BL};
-typedef struct  {
-	unsigned int  patt1;
-	unsigned int  patt2;
-	unsigned int  patt3;
-	unsigned int  patt4;
-	unsigned int  patt5;
-	unsigned int  patt6;
-	unsigned int  patt7;
-	unsigned int  patt8;
-	
-	}position;
 
-position pos[123*4];
+enum Marker {C, B, SR, SL, FR, BR, FL, BL};
+
+//Stocke la liste des marqueur à identifier en fonction de la mesure courante du morceau
+std::vector<Marker> move[123*4];
+
+//viewCount stocke le nombre de fois qu'un marqueur a été vu dans une mesure 
+unsigned int viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;
+
+
 unsigned int bar, beat;
 clock_t			start, end;
 double			elapsed;
 const double BPM_96 =  625;
 const double BPM_156 = 384;
+
+//Stocke le temps a attendre entre 2 beat
 double deltaTime;
 
 // ================================= FONCTIONS ===========================================
@@ -89,8 +88,62 @@ void drawImage(int id, float x, float y, float z, int size);
 
 //Gère les évènements clavier de l'application
 void keyEvent(unsigned char key, int x, int y);
+void initChoregraphy();
+void checkPosition();
 
-//=======================================================================================
+void initChoregraphy(){
+
+	//77 = nombre de mesures du morceau (+ ou -)
+	//* 4 = signature rythmique du morceau. 
+	//Avec le tableau move on peut potentiellement faire un chagement de mouvement à chaque temps du morceau
+
+	for(int i = 0; i < 77*4; i++){
+
+		move[i].push_back(Marker::B);
+		move[i].push_back(Marker::C);
+		move[i].push_back(Marker::BL);
+		move[i].push_back(Marker::BR);
+		move[i].push_back(Marker::FL);
+		move[i].push_back(Marker::SR);
+		move[i].push_back(Marker::SL);
+		move[i].push_back(Marker::FR);
+	}
+}
+
+void checkPosition(){
+
+	unsigned int threshold = 0; 
+	std::vector<bool> posOK;
+
+	int i =0;
+	while(i < move[bar].size()){
+
+		switch(move[bar].at(i)){
+			case C : 
+				if(viewCountC > threshold) posOK.push_back(true);
+				else posOK.push_back(false);
+				break;
+			case B : 
+				if(viewCountB > threshold) posOK.push_back(true);
+				else posOK.push_back(false);
+				break;
+			case BL : 
+				if(viewCountBL > threshold) posOK.push_back(true);
+				else posOK.push_back(false);
+				break;
+		}//end switch
+
+	i++;
+	}//end while
+
+	bool checker= true;
+	for(int j =0; j < posOK.size(); j++){
+
+		checker = checker && posOK.at(j);
+	}
+
+	std::cout << "Check Pos" << checker << std::endl;
+}
 
 void init(int argc, char **argv)
 {
@@ -132,12 +185,15 @@ void init(int argc, char **argv)
     // open the graphics window
     argInit( &cparam, 2.0, 0.0, 0, 0, 0 );
 
+	initChoregraphy();
+
 	//sound init
 	bar = 0;
 	beat = 0;
 	deltaTime = BPM_96;
 	
-	//Init SDL_mixer
+	//Test son !
+	//SDL_mixer
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
 	Mix_Music * musique = Mix_LoadMUS("../musics/queen.ogg");
@@ -228,18 +284,28 @@ void update()
 
 	if(elapsed >= deltaTime){
 		 
-	beat++;
-	if(beat == 5){
-		bar++;
-		beat=1;
-	}
-
+		 beat++;
+		 //Changement de mesure
+		 if(beat == 5){
+			 if (bar < 77) bar++;
+			 viewCountB = 0;
+			 viewCountBL = 0; 
+			 viewCountBR = 0;
+			 viewCountC = 0;
+			 viewCountFL = 0;
+			 viewCountFR = 0;
+			 viewCountSL = 0;
+			 viewCountSR = 0;
+			 beat=1;
+			 std::cout << "mesure " << bar << std::endl;
+		 }
+	
 	if(bar == 13) deltaTime = BPM_156;
 
-		std::cout << "mesure " << bar;
-		std::cout << "beat " << beat << std::endl;
-		start = end;
-	}
+		// std::cout << "mesure " << bar;
+		// std::cout << "beat " << beat << std::endl;
+		 start = end;
+	 }
 
 	ARUint8         *dataPtr;
     ARMarkerInfo    *marker_info;
@@ -276,24 +342,62 @@ void update()
 		exit(0);
     }
 
-   
+	//MARQUE
 	/* check for object visibility */
-	// NEW WAY
- 	for( i = 0; i < m_config->marker_num; i++ ) {
+	//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
+ 	for( i = 0; i < move[bar].size(); i++ ) {
+
 		k = -1;
 		for( j = 0; j < marker_num; j++ ) {
-			if( m_config->marker[i].patt_id == marker_info[j].id ) {
+
+			if( move[bar].at(i) == marker_info[j].id ) {
 				/* you've found a pattern */
-				printf("Found pattern: %d ", m_config->marker[i].patt_id);
-				switch(m_config->marker[i].patt_id){
-					case C: printf("Chest"); break;
-					case B: printf("Back"); break;
-					case SR: printf("Shoulder Right"); break;
-					case SL: printf("Shoulder Left"); break;
-					case FR: printf("Hand Right Front"); break;
-					case BR: printf("Hand Right Back"); break;
-					case FL: printf("Hand Left Front"); break;
-					case BL: printf("Hand Left Back"); break;
+				printf("Found pattern: %d ", marker_info[j].id);
+				switch(marker_info[j].id){
+
+				case C: {
+					printf("Chest"); 
+					viewCountC++;
+					break;	
+					};
+				
+				case B: {
+					printf("Back");
+					viewCountB++;
+					break;
+				}
+				case SR: {
+					
+					printf("Shoulder Right");
+					viewCountSR++;
+					break;
+				}
+				case SL: {
+					printf("Shoulder Left"); 
+					viewCountSL++;
+					break;
+						 }
+				case FR: {
+					printf("Hand Right Front"); 
+					viewCountFR++;
+					break;
+						 }
+				case BR: {
+						printf("Hand Right Back"); 
+						viewCountBR++;
+						break;
+					}
+				case FL: {
+					printf("Hand Left Front"); 
+					viewCountFL++;
+					break;
+						 }
+				case BL: {
+					printf("Hand Left Back"); 
+					viewCountBL++;
+					break;
+					 }
+
 				};
 				printf("\n");
 				glColor3f( 0.0, 1.0, 0.0 );
@@ -307,6 +411,9 @@ void update()
 			m_config->marker[i].visible = 0;
 			continue;
 		}
+
+		
+		checkPosition();
 
 		/* calculate the transform for each marker */
 		if( m_config->marker[i].visible == 0 ) {
@@ -344,9 +451,11 @@ void render()
 
     /* calculate the viewing parameters - gl_para */
 	for( i = 0; i < m_config->marker_num; i++ ) {
-        if( m_config->marker[i].visible == 0 ) continue;
+		
+        if( m_config->marker[i].visible == 1 ){
         argConvGlpara(m_config->marker[i].trans, gl_para);
 		drawObject( m_config->marker[i].patt_id, gl_para);
+		}
     }
     glPopMatrix();
 	glDisable( GL_LIGHTING );
