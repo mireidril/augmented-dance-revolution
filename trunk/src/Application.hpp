@@ -89,6 +89,7 @@ class Application
 
 		const int						m_thres;
 		ARMultiMarkerInfoT *			m_config;
+		ARMarkerInfo *					m_marker_info;
 		std::vector<Image*>				m_images;
 				
 		//Stocke la liste des marqueur à identifier en fonction de la mesure courante du morceau
