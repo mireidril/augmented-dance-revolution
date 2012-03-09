@@ -10,6 +10,7 @@ Application::Application()
 , m_isRunning(true)
 , m_thres(50)
 , m_config(NULL)
+, m_marker_info(NULL)
 , viewCountB(0)
 , viewCountC(0)
 , viewCountBL(0)
@@ -178,7 +179,6 @@ void Application::update()
 
 	// ====== Récupère l'image filmée par la caméra
 	ARUint8         *dataPtr;
-    ARMarkerInfo    *marker_info;
     int             marker_num;
     int             i, j, k;
 
@@ -213,7 +213,7 @@ void Application::update()
 	m_camImage = SDL_CreateRGBSurfaceFrom(dataPtrFlipped, sizeX, sizeY, 8 * AR_PIX_SIZE_DEFAULT, sizeX * AR_PIX_SIZE_DEFAULT, rmask, gmask, bmask, amask);
 
     // detect the markers in the video frame 
-	if( arDetectMarker(dataPtrFlipped, m_thres, &marker_info, &marker_num) < 0 ) {
+	if( arDetectMarker(dataPtrFlipped, m_thres, &m_marker_info, &marker_num) < 0 ) {
 		exit(0);
     }
 
@@ -253,10 +253,10 @@ void Application::update()
 		k = -1;
 		for( j = 0; j < marker_num; j++ ) {
 
-			if( move[bar].at(i) == marker_info[j].id ) {
+			if( move[bar].at(i) == m_marker_info[j].id ) {
 				/* you've found a pattern */
-				printf("Found pattern: %d ", marker_info[j].id);
-				switch(marker_info[j].id){
+				printf("Found pattern: %d ", m_marker_info[j].id);
+				switch(m_marker_info[j].id){
 
 				case C: {
 					printf("Chest"); 
@@ -304,9 +304,9 @@ void Application::update()
 				};
 				printf("\n");
 				//glColor3f( 0.0, 1.0, 0.0 );
-				argDrawSquare(marker_info[j].vertex,0,0);
+				//argDrawSquare(m_marker_info[j].vertex,0,0);
 				if( k == -1 ) k = j;
-				else if( marker_info[k].cf < marker_info[j].cf ) k = j;
+				else if( m_marker_info[k].cf < m_marker_info[j].cf ) k = j;
 			}
 		}
 
@@ -320,10 +320,10 @@ void Application::update()
 
 		/* calculate the transform for each marker */
 		if( m_config->marker[i].visible == 0 ) {
-            arGetTransMat(&marker_info[k], m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
+            arGetTransMat(&m_marker_info[k], m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
         }
         else {
-            arGetTransMatCont(&marker_info[k], m_config->marker[i].trans, m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
+            arGetTransMatCont(&m_marker_info[k], m_config->marker[i].trans, m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
         }
         m_config->marker[i].visible = 1;
 		
@@ -363,7 +363,7 @@ void Application::render()
 	{
         if( m_config->marker[i].visible == 1 )
 		{
-			//argConvGlpara(m_config->marker[i].trans, gl_para);
+			argConvGlpara(m_config->marker[i].trans, gl_para);
 			drawMarker(i);
 		}
     }
@@ -385,8 +385,8 @@ void Application::drawMarker(int idMarker)
 {
 	//Récupération des coordonnées du marqueur sur l'image
 	SDL_Rect pos;
-	pos.x = m_config->marker[idMarker].trans[2][0] * m_windowsWidth + m_windowsWidth/2;
-	pos.y = m_config->marker[idMarker].trans[2][1] * m_windowsHeight + m_windowsHeight/2;
+	pos.x = (m_marker_info->vertex[0][0] + m_marker_info->vertex[1][0] + m_marker_info->vertex[2][0] + m_marker_info->vertex[3][0]) / 4;
+	pos.y = (m_marker_info->vertex[0][1] + m_marker_info->vertex[1][1] + m_marker_info->vertex[2][1] + m_marker_info->vertex[3][1]) / 4;
 	
 	//int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
 	//int maxZ = 1500;
