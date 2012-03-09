@@ -33,7 +33,8 @@
 
 #include <iostream>
 
-//Variables
+// ================================= VARIABLES ===========================================
+
 const int				m_thresh = 50;
 int						m_Xsize, m_Ysize;
 ARMultiMarkerInfoT *	m_config;
@@ -61,31 +62,38 @@ const double BPM_96 =  625;
 const double BPM_156 = 384;
 double deltaTime;
 
-//Functions
-void cleanUp();
+// ================================= FONCTIONS ===========================================
+//Initialise la fenêtre Glut et les paramètres ARToolkit
 void init(int argc, char **argv);
-void run();
-void update();
-void render();
-
-void drawObject(int obj_id, double gl_para[16]);
-void drawText(float x, float y, float z, void* font, const char* s);
-void drawImage(int id, float x, float y, float z);
-
-void keyEvent(unsigned char key, int x, int y);
+//Charge toutes les images de l'application
+void initImages();
+//Charge une image et lui attribue un identifiant de texture stocké dans m_texturesIds[id]
 void loadImage(const char * filename, int id);
 
-//Functions definitions
-void cleanUp()
-{
-	arVideoCapStop();
-    arVideoClose();
-    argCleanup();
-}
+//Définit la boucle principale de l'application
+void run();
+//Gère les opérations de l'application
+void update();
+//Gère le rendu de l'application
+void render();
+
+//Détruit et désalloue toutes les ressources de l'application
+void cleanUp();
+
+//Dessine un objet 3D selon la matrice de vue passée en paramètre
+void drawObject(int obj_id, double gl_para[16]);
+//Dessine le texte s à la position (x, y, z) de la fenêtre
+void drawText(float x, float y, float z, void* font, const char* s);
+//Dessine l'image id à la position (x, y, z) de la fenêtre
+void drawImage(int id, float x, float y, float z);
+
+//Gère les évènements clavier de l'application
+void keyEvent(unsigned char key, int x, int y);
+
+//=======================================================================================
 
 void init(int argc, char **argv)
 {
-	
 	//Glut init
 	glutInit(&argc, argv);
 	
@@ -95,19 +103,14 @@ void init(int argc, char **argv)
 		char *vconf = "";
 	#endif
 
-	//Init textures
-	m_nbImages = 1;
-	m_texturesIds = new GLuint[m_nbImages];
-	loadImage("../images/test.jpg", 0);
-
 	ARParam  wparam;
-    /* open the video path */
+    // open the video path
     if( arVideoOpen( vconf ) < 0 ) exit(0);
-    /* find the size of the window */
+    // find the size of the window
     if( arVideoInqSize(&m_Xsize, &m_Ysize) < 0 ) exit(0);
     printf("Image size (x,y) = (%d,%d)\n", m_Xsize, m_Ysize);
 
-    /* set the initial camera parameters */
+    // set the initial camera parameters
 	char *cparam_name = "Data/camera_para.dat";
 	if( arParamLoad(cparam_name, 1, &wparam) < 0 ) {
         printf("Camera parameter load error !!\n");
@@ -126,17 +129,15 @@ void init(int argc, char **argv)
         exit(0);
     }
 
-    /* open the graphics window */
-    argInit( &cparam, 1.0, 0.0, 0, 0, 0 );
+    // open the graphics window
+    argInit( &cparam, 2.0, 0.0, 0, 0, 0 );
 
 	//sound init
 	bar = 0;
 	beat = 0;
 	deltaTime = BPM_96;
 	
-
-	//Test son !
-	//SDL_mixer
+	//Init SDL_mixer
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
 	Mix_Music * musique = Mix_LoadMUS("../musics/queen.ogg");
@@ -152,33 +153,93 @@ void init(int argc, char **argv)
 	start = clock();
 }
 
+void initImages()
+{
+	m_nbImages = 1;
+	m_texturesIds = new GLuint[m_nbImages];
+	loadImage("../images/test2.jpg", 0);
+}
+
+void loadImage(const char * filename, int id)
+{
+    SDL_Surface * picture_surface = NULL;
+
+    picture_surface = IMG_Load(filename);
+    if (picture_surface == NULL)
+        std::cout<<"Image "<<filename<<" non chargée !!"<<std::endl;
+
+	//Retournement surface car standard différents entre OpenGL et SDL
+	int current_line,pitch;
+    SDL_Surface * fliped_surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
+                                   picture_surface->w, picture_surface->h,
+                                   picture_surface->format->BitsPerPixel,
+                                   picture_surface->format->Rmask,
+                                   picture_surface->format->Gmask,
+                                   picture_surface->format->Bmask,
+                                   picture_surface->format->Amask);
+
+
+    SDL_LockSurface(picture_surface);
+    SDL_LockSurface(fliped_surface);
+
+    pitch = picture_surface->pitch;
+    for (current_line = 0; current_line < picture_surface->h; current_line ++)
+    {
+        memcpy(&((unsigned char* )fliped_surface->pixels)[current_line*pitch],
+               &((unsigned char* )picture_surface->pixels)[(picture_surface->h - 1  -
+                                                    current_line)*pitch],
+               pitch);
+    }
+
+    SDL_UnlockSurface(fliped_surface);
+    SDL_UnlockSurface(picture_surface);
+	SDL_FreeSurface(picture_surface);
+    picture_surface = fliped_surface;
+
+	if(id < m_nbImages)
+	{
+		glGenTextures(1, &m_texturesIds[id]);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_surface->w, picture_surface->h, 0, GL_RGB, GL_UNSIGNED_BYTE, picture_surface->pixels);
+	}
+
+	SDL_FreeSurface(picture_surface);
+}
+
 void run()
 {
 	arVideoCapStart();
 
+	//Charge les images
+	initImages();
+	
     argMainLoop( NULL, keyEvent, update );
 }
 
 void update()
 {
+	end = clock();
+	elapsed = ((double)end - start);
 
-	 end = clock();
-     elapsed = ((double)end - start);
-
-	 if(elapsed >= deltaTime){
+	if(elapsed >= deltaTime){
 		 
-		 beat++;
-		 if(beat == 5){
-			 bar++;
-			 beat=1;
-		 }
+	beat++;
+	if(beat == 5){
+		bar++;
+		beat=1;
+	}
 
-		 if(bar == 13) deltaTime = BPM_156;
+	if(bar == 13) deltaTime = BPM_156;
 
-		 std::cout << "mesure " << bar;
-		 std::cout << "beat " << beat << std::endl;
-		 start = end;
-	 }
+		std::cout << "mesure " << bar;
+		std::cout << "beat " << beat << std::endl;
+		start = end;
+	}
 
 	ARUint8         *dataPtr;
     ARMarkerInfo    *marker_info;
@@ -192,7 +253,7 @@ void update()
     }
 
     argDrawMode2D();
-    argDispImage( dataPtr, 0,0 );
+    argDispImage( dataPtr, 0, 0 );
 
     /* detect the markers in the video frame */
     if( arDetectMarker(dataPtr, m_thresh, &marker_info, &marker_num) < 0 ) {
@@ -249,14 +310,13 @@ void update()
 	arVideoCapNext();
     render();
 	drawText(m_Xsize, m_Ysize, 100, GLUT_BITMAP_TIMES_ROMAN_24, "HEllo!");
-	drawImage(0, m_Xsize/2, m_Ysize/2, 30);
+	//drawImage(0, m_Xsize, m_Ysize, 10);
 
     argSwapBuffers();
 }
 
 void render()
 { 
-
 	int     i;
     double  gl_para[16];
        
@@ -276,6 +336,14 @@ void render()
     glPopMatrix();
 	glDisable( GL_LIGHTING );
     glDisable( GL_DEPTH_TEST );
+}
+
+
+void cleanUp()
+{
+	arVideoCapStop();
+    arVideoClose();
+    argCleanup();
 }
 
 void drawObject(int obj_id, double gl_para[16])
@@ -301,12 +369,16 @@ void drawObject(int obj_id, double gl_para[16])
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambi);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightZeroColor);
 
+
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_flash_shiny);	
 
 	if(obj_id == 0){
 		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_flash_collide);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_collide);
 		/* draw a cube */
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, m_text1);
 		glTranslatef( 0.0, 0.0, 30.0 );
 		glutSolidSphere(30,12,6);
 	}
@@ -342,63 +414,50 @@ void drawImage(int id, float x, float y, float z)
 	{
 		/*glEnable(GL_TEXTURE_2D);
 		glEnable(GL_DEPTH_TEST);
-		//glTranslatef( x, y, z);
-		glColor4f(1.f,1.f,0.f, 1.f);
+		glTranslatef(x, y, z);
+		glColor4f(1.f, 1.f,0.f, 1.f);
 		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
 		glBegin(GL_QUADS);
-			glTexCoord2d(0,1); glVertex3d(0,100,1);
-			glTexCoord2d(1,1); glVertex3d(100,100,1);
-			glTexCoord2d(1,0); glVertex3d(100,0,1);
+			glTexCoord2d(0,1); glVertex3d(0,10,1);
+			glTexCoord2d(1,1); glVertex3d(10,10,1);
+			glTexCoord2d(1,0); glVertex3d(10,0,1);
 			glTexCoord2d(0,0); glVertex3d(0,0,1);
-		glEnd();
-		*/
+		glEnd();*/
 
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, m_text1);
+		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTranslatef(x, y, z);
+		glScalef(20, 20, 20);
 		glBegin(GL_QUADS);
-		glTexCoord2i(0,0);
-		glVertex3i(-100,-100,-1);
-		glTexCoord2i(10,0);
-		glVertex3i(100,-100,-1);
-		glTexCoord2i(10,10);
-		glVertex3i(100,100,-1);
-		glTexCoord2i(0,10);
-		glVertex3i(-100,100,-1);
+			/*glTexCoord2i(0, 0);
+			glVertex3i(50, -50,-1);
+			glTexCoord2i(0,1);
+			glVertex3i(50,50,-1);
+			glTexCoord2i(1,1);
+			glVertex3i(-50,50,-1);
+			glTexCoord2i(1,0);
+			glVertex3i(-50,-50,-1);*/
+
+			glTexCoord2d(0,1);  glVertex3d(1,-1,1);
+			glTexCoord2d(0,0);  glVertex3d(1,-1,-1);
+			glTexCoord2d(1,0);  glVertex3d(-1,-1,-1);
+			glTexCoord2d(1,1);  glVertex3d(-1,-1,1);
 		glEnd();
 	}
 }
 
 void keyEvent(unsigned char key, int x, int y)
 {
+	//ECHAP
 	if (key == 0x1b) 
 	{
 		exit(0);
 	}
 }
 
-void loadImage(const char * filename, int id)
-{
-    SDL_Surface * picture_surface = NULL;
 
-    picture_surface = IMG_Load(filename);
-    if (picture_surface == NULL)
-        std::cout<<"ERRREUREURUERUE"<<std::endl;
-
-	if(id < m_nbImages)
-	{
-		glGenTextures(1, &m_texturesIds[id]);
-		glBindTexture(GL_TEXTURE_2D, m_texturesIds[id]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
-		
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_surface->w, picture_surface->h, 0, GL_RGB, GL_UNSIGNED_BYTE, picture_surface->pixels);
-		std::cout<<picture_surface->w<<" "<<picture_surface->h<<std::endl;
-	}
-
-	SDL_FreeSurface(picture_surface);
-}
 
 #endif //__APPLICATION_HPP__
