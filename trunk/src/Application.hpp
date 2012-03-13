@@ -72,7 +72,7 @@ class Application
 		//Dessine une image à la position du marqueur idMarker
 		void drawMarker(int idMarker);
 		//Dessine le texte s à la position (x, y) de la fenêtre
-		void drawText(int x, int y, SDL_Color color, char* s);
+		void drawText(int x, int y, SDL_Color color, const char* s);
 		//Attribue la position (*i, *j) à une image et la trace. Si i ou j est nul, l'image sera tracée à sa position de base.
 		void drawImage(int id, int * i, int * j);
 
