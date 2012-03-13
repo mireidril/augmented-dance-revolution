@@ -42,7 +42,6 @@ typedef struct image
 	SDL_Surface * m_image;
 	SDL_Rect * m_pos;
 	SDL_Rect * m_size;
-	SDL_Rect * m_drawingSize;
 } Image;
 
 class Application
@@ -55,8 +54,11 @@ class Application
 		void init();
 		//Charge toutes les images de l'application
 		void initImages();
-		//Charge une image et la stocke dans m_images
-		void loadImage(const char * filename, int posX, int posY, int sizeX, int sizeY, int drawingSizeX, int drawingSizeY);
+		//Charge une image et la stocke dans m_images, drawingSizeX & drawingSizeY sont en % de la taille de la fenêtre
+		void loadImage(const char * filename, int posX, int posY, int sizeX, int sizeY);
+
+		//Affiche et met à jour les silhouettes et le score
+		void updateInterface();
 
 		//Définit la boucle principale de l'application
 		void run();
@@ -69,8 +71,8 @@ class Application
 		void drawMarker(int idMarker);
 		//Dessine le texte s à la position (x, y) de la fenêtre
 		void drawText(int x, int y, SDL_Color color, char* s);
-		//Dessine l'image id à la position (x, y) de la fenêtre
-		void drawImage(int id, int x, int y);
+		//Attribue la position (*i, *j) à une image et la trace. Si i ou j est nul, l'image sera tracée à sa position de base.
+		void drawImage(int id, int * i, int * j);
 
 		//Gère les évènements SDL de l'application
 		void checkEvents();
@@ -93,7 +95,8 @@ class Application
 		std::vector<Image*>				m_images;
 				
 		//Stocke la liste des marqueur à identifier en fonction de la mesure courante du morceau
-		std::vector<Marker>				move[123*4];
+		std::vector<Marker>				move[77];
+		std::vector<int>				imagesMove;
 
 		//viewCount stocke le nombre de fois qu'un marqueur a été vu dans une mesure 
 		unsigned int					viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;

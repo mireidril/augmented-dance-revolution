@@ -49,7 +49,6 @@ Application::~Application()
 		SDL_FreeSurface(m_images[i]->m_image);
 		delete m_images[i]->m_pos;
 		delete m_images[i]->m_size;
-		delete m_images[i]->m_drawingSize;
 		delete m_images[i];
 	}
 
@@ -132,7 +131,7 @@ void Application::init()
 	}
 	else
 	{
-		//Mix_PlayMusic(musique, -1);
+		Mix_PlayChannel(0, musique, 1);
 	}
 
 	start = clock();
@@ -141,11 +140,16 @@ void Application::init()
 //Charge toutes les images de l'application
 void Application::initImages()
 {
-	loadImage("../images/test.jpg", 0, 0, 512, 512, 30, 30);
+	//Images des silhouettes
+	loadImage("../images/fond.png", 0, m_windowsHeight, 731, 141);
+	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 125, 141);
+	loadImage("../images/silhouette2.png", 0, m_windowsHeight, 125, 141);
+
+	//loadImage("../images/test.jpg", 0, 0, 512, 512, 30, 30);
 }
 
 //Charge une image et la stocke dans m_images
-void Application::loadImage(const char * filename, int posX, int posY, int sizeX, int sizeY, int drawingSizeX, int drawingSizeY)
+void Application::loadImage(const char * filename, int posX, int posY, int sizeX, int sizeY)
 {
 	Image * img = new Image;
 	SDL_Surface * surface = IMG_Load(filename);
@@ -158,11 +162,25 @@ void Application::loadImage(const char * filename, int posX, int posY, int sizeX
 	size->x = sizeX;
 	size->y = sizeY;	
 	img->m_size = size;
-	SDL_Rect * dSize = new SDL_Rect;
-	dSize->x = drawingSizeX;
-	dSize->y = drawingSizeY;	
-	img->m_drawingSize = dSize;
 	m_images.push_back(img);
+}
+
+//Affiche et met à jour les silhouettes et le score
+void Application::updateInterface()
+{
+	int nbImagesShowed = 5;
+	// ===== Affichage de l'interface
+	drawImage(0, NULL, &m_windowsHeight);
+	// ===== Affichage des silhouettes
+	int xBase = 10, x;
+	for(int i = 0; i < nbImagesShowed; ++i)
+	{
+		x = xBase + 150*i + 20;
+		if(bar+i < imagesMove.size())
+		{
+			drawImage(imagesMove[bar+i], &x, &m_windowsHeight);
+		}
+	}
 }
 
 //Définit la boucle principale de l'application
@@ -220,7 +238,7 @@ void Application::update()
 	m_camImage = SDL_CreateRGBSurfaceFrom(dataPtrFlipped, sizeX, sizeY, 8 * AR_PIX_SIZE_DEFAULT, sizeX * AR_PIX_SIZE_DEFAULT, rmask, gmask, bmask, amask);
 
     // detect the markers in the video frame 
-	if( arDetectMarker(dataPtrFlipped, m_thres, &m_marker_info, &marker_num) < 0 ) {
+	if( arDetectMarker(dataPtr, m_thres, &m_marker_info, &marker_num) < 0 ) {
 		exit(0);
     }
 
@@ -311,8 +329,6 @@ void Application::update()
 
 				};
 				printf("\n");
-				//glColor3f( 0.0, 1.0, 0.0 );
-				//argDrawSquare(m_marker_info[j].vertex,0,0);
 				if( k == -1 ) k = j;
 				else if( m_marker_info[k].cf < m_marker_info[j].cf ) k = j;
 			}
@@ -337,7 +353,6 @@ void Application::update()
 		
 	}
 
-
 	render();
 	arVideoCapNext();
 
@@ -349,7 +364,7 @@ void Application::render()
 {
 	// ===== Affichage de l'image filmée par la caméra
 	float zoomX = (float)m_windowsWidth / m_camImageWidth;
-	float zoomY = (float)m_windowsHeight / m_camImageHeight;
+	float zoomY = (float)m_windowsWidth*0.75 / m_camImageHeight;
 	
 	if(m_camImage != NULL)
 	{
@@ -366,22 +381,17 @@ void Application::render()
 	int     i;
     double  gl_para[16];
 
-    /* calculate the viewing parameters - gl_para */
+    // calculate the viewing parameters - gl_para
 	for( i = 0; i < m_config->marker_num; i++ )
 	{
         if( m_config->marker[i].visible == 1 )
 		{
-			argConvGlpara(m_config->marker[i].trans, gl_para);
 			drawMarker(i);
 		}
     }
 
-	// ===== Affichage des textes
-	SDL_Color green = {0, 255, 0};
-	drawText(500, 200, green, "HEllo!");
-
 	// ===== Affichage des élements de la chorégraphie
-	drawImage(0, 600, 500);
+	updateInterface();
 
 	// ===== Met à jour l'affichage
 	SDL_Flip(m_screen);
@@ -399,13 +409,10 @@ void Application::drawMarker(int idMarker)
 	//int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
 	//int maxZ = 1500;
 	//double rapport = (maxZ-z)/maxZ;
-
 	//float zoomX = (float) (m_images[0]->m_size->x * rapport) / m_images[0]->m_size->x;
 	//float zoomY = (float) (m_images[0]->m_size->y * rapport) / m_images[0]->m_size->y;
-	float zoomX = (float) (m_images[0]->m_drawingSize->x * 2 ) / m_images[0]->m_size->x;
-	float zoomY = (float) (m_images[0]->m_drawingSize->y * 2) / m_images[0]->m_size->y;
 	
-	SDL_Surface * img = rotozoomSurfaceXY(m_images[0]->m_image, 0.0f, zoomX, zoomY, 1);
+	SDL_Surface * img = rotozoomSurfaceXY(m_images[0]->m_image, 0.0f, 1.0, 1.0, 1);
 	SDL_BlitSurface(img, NULL, m_screen, &pos);
 	SDL_FreeSurface(img);
 }
@@ -421,21 +428,27 @@ void Application::drawText(int x, int y, SDL_Color color, char* s)
 	SDL_FreeSurface(texte);
 }
 
-//Dessine l'image id à la position (x, y) de la fenêtre
-void Application::drawImage(int id, int x, int y)
+//Attribue la position (*i, *j) à une image et la trace. Si i ou j est nul, l'image sera tracée à sa position de base.
+void Application::drawImage(int id, int * i, int * j)
 {
 	if( id < m_images.size() )
 	{
+		if(i != NULL)
+		{
+			m_images[id]->m_pos->x = *i;
+		}
+		if(j != NULL)
+		{
+			m_images[id]->m_pos->y = *j;
+		}
+
 		if(m_images[id]->m_image)
 		{
-			float zoomX = (float) m_images[id]->m_drawingSize->x / m_images[id]->m_size->x;
-			float zoomY = (float) m_images[id]->m_drawingSize->y / m_images[id]->m_size->y;
-	
-			SDL_Surface * img = rotozoomSurfaceXY(m_images[id]->m_image, 0.0f, zoomX, zoomY, 1);
+			SDL_Surface * img = rotozoomSurface(m_images[id]->m_image, 0.0f, 1.0, 1);
 
 			SDL_Rect pos;
-			pos.x = x;
-			pos.y = y;
+			pos.x = m_images[id]->m_pos->x;
+			pos.y = m_images[id]->m_pos->y - m_images[id]->m_size->y;
 			SDL_BlitSurface(img, NULL, m_screen, &pos);
 			SDL_FreeSurface(img);
 		}
@@ -476,7 +489,7 @@ void Application::initChoregraphy()
 	//* 4 = signature rythmique du morceau. 
 	//Avec le tableau move on peut potentiellement faire un chagement de mouvement à chaque temps du morceau
 
-	for(int i = 0; i < 77*4; i++)
+	for(int i = 0; i < 77; i++)
 	{
 		move[i].push_back(Marker::B);
 		//move[i].push_back(Marker::C);
@@ -487,6 +500,25 @@ void Application::initChoregraphy()
 		//move[i].push_back(Marker::SL);
 		//move[i].push_back(Marker::FR);
 	}
+
+	//Ici on remplit les images des choregraphies
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
+	imagesMove.push_back(2);
+	imagesMove.push_back(1);
 }
 
 void Application::checkPosition()
