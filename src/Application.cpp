@@ -24,6 +24,8 @@ Application::Application()
 	, beat(-1)
 	, start(0)
 	, end(0)
+	, countdownStart(0)
+	, countdownCurrent(0)
 	, elapsed(-1.f)
 	, BPM_96(625.0)
 	, BPM_156(384.0)
@@ -401,11 +403,24 @@ void Application::render()
 		SDL_FreeSurface(camImage);
 	}
 
+	// === Affichage du compte à rebours
+	SDL_Color green = {0, 255, 0};
+	if(countdownCurrent - countdownStart <= 3000 && countDownPassed == false)
+	{
+		float chrono = ceilf( (3000.f - (countdownCurrent - countdownStart) ) / 1000.f );
+		char s[33];
+		itoa(chrono, s, 10);
+		drawText(m_windowsWidth/2, m_windowsHeight/2, green,  s );
+	}
+	else if(countdownCurrent - countdownStart > 3000 && bar == 0 && beat < 2)
+	{
+		drawText(m_windowsWidth/2, m_windowsHeight/2, green,  "GO!!" );
+	}
+
 	// ===== Affichage des éléments graphiques lors de la détection d'un marqueur
 	drawMarkers();
 
 	// ===== Affichage des textes
-	SDL_Color green = {0, 255, 0};
 	if(moveDone) drawText(20, 10, green, "+100!");
 	char scoreFinal[256];
 	char scoreChar[50];
@@ -452,7 +467,7 @@ void Application::drawMarker(int idMarker)
 }
 
 //Dessine le texte s à la position (x, y) de la fenêtre
-void Application::drawText(int x, int y, SDL_Color color, char* s)
+void Application::drawText(int x, int y, SDL_Color color, const char* s)
 {
 	SDL_Surface * texte = TTF_RenderText_Blended(m_font, s, color);
 	SDL_Rect pos;
