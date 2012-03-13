@@ -81,6 +81,7 @@ class Application
 		void checkPosition();
 
 	private :
+		bool							m_gameStarted;
 		SDL_Surface *					m_screen;
 		SDL_Surface *					m_camImage;
 		int								m_windowsWidth;
