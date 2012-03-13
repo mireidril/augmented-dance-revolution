@@ -398,7 +398,6 @@ void Application::render()
 
 	// ===== Affichage des textes
 	SDL_Color green = {0, 255, 0};
-	drawText(500, 200, green, "Hello!");
 	if(moveDone) drawText(20, 10, green, "+100!");
 	char scoreFinal[256];
 	char scoreChar[50];
@@ -406,7 +405,7 @@ void Application::render()
 	sprintf (scoreChar, "%d", score);
 	strcat(scoreFinal,scoreChar);
 	
-	drawText(500, 20, green, scoreFinal);
+	drawText(600, 20, green, scoreFinal);
 
 	// ===== Affichage des élements de la chorégraphie
 	updateInterface();
