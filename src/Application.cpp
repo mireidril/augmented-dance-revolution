@@ -28,7 +28,7 @@ Application::Application()
 	, countdownCurrent(0)
 	, elapsed(-1.f)
 	, BPM_96(625.0)
-	, BPM_156(384.0)
+	, BPM_156(375.0)//384
 	, m_font(NULL)
 	, deltaTime(-1)
 	, validate(NULL)
@@ -36,6 +36,7 @@ Application::Application()
 	, moveDone(false)
 	, countDownPassed(false)
 	, score(0)
+	, depassement(0)
 {
 
 }
@@ -247,15 +248,13 @@ void Application::update()
 
 	// ======Compte à rebours du début
 	if(m_gameStarted && countDownPassed == false) countdownCurrent = clock();
-	if (countdownCurrent - countdownStart > 3000 && countDownPassed == false){
+	if (countdownCurrent - countdownStart > 300 && countDownPassed == false){
 
-	
 		start = clock();
 		if(musique)
 		{
 			Mix_PlayChannel(0, musique, 1);
 		}
-		start = clock();
 		countDownPassed  = true;
 	}
 
@@ -264,10 +263,15 @@ void Application::update()
 	{
 		end = clock();
 		elapsed = ((double)end - start);
-		
-		if(elapsed >= deltaTime){
+
+		if(elapsed >= deltaTime-depassement){
 
 			start = end;
+			
+			if(elapsed - deltaTime - depassement >0 )  depassement = elapsed - deltaTime - depassement;
+			else depassement = 0;
+
+			//std::cout << "Depassement " << depassement << std::endl;	
 
 			beat++;
 			 if(beat == 2)
@@ -286,13 +290,13 @@ void Application::update()
 				viewCountSL = 0;
 				viewCountSR = 0;
 				beat=1;
-				//std::cout << "mesure " << bar << std::endl;
+				std::cout << "mesure " << bar << std::endl;
 				moveDone = false;
 			}
 
 			if(bar == 13) deltaTime = BPM_156;
 
-			// std::cout << "mesure " << bar;
+			//std::cout << "mesure " << bar;
 			// std::cout << "beat " << beat << std::endl;
 			
 		}
@@ -559,6 +563,20 @@ void Application::initChoregraphy()
 	}
 
 	//Ici on remplit les images des choregraphies
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);

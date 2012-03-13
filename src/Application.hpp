@@ -105,7 +105,7 @@ class Application
 		//viewCount stocke le nombre de fois qu'un marqueur a été vu dans une mesure 
 		unsigned int					viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;
 
-		unsigned int					bar, beat, score;
+		unsigned int					bar, beat, score, depassement;
 		clock_t							start, end, countdownStart, countdownCurrent;
 		double							elapsed;
 		const double					BPM_96;
