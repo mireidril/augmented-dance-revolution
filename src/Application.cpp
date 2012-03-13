@@ -28,6 +28,10 @@ Application::Application()
 , BPM_156(384.0)
 , m_font(NULL)
 , deltaTime(-1)
+, validate(NULL)
+, musique(NULL)
+, moveDone(false)
+, score(0)
 {
 
 }
@@ -118,7 +122,10 @@ void Application::init()
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
 	
-	Mix_Music * musique = Mix_LoadMUS("../musics/queen.ogg");
+	Mix_AllocateChannels(2);
+	musique = Mix_LoadWAV("../musics/queen.ogg");
+	validate = Mix_LoadWAV("../musics/validate.ogg");
+	
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
 	if(musique == NULL){
 		std::cout<<"musique non jouée"<<std::endl;
@@ -237,6 +244,7 @@ void Application::update()
 			 viewCountSR = 0;
 			 beat=1;
 			 std::cout << "mesure " << bar << std::endl;
+			 moveDone = false;
 		 }
 	
 	if(bar == 13) deltaTime = BPM_156;
@@ -471,13 +479,13 @@ void Application::initChoregraphy()
 	for(int i = 0; i < 77*4; i++)
 	{
 		move[i].push_back(Marker::B);
-		move[i].push_back(Marker::C);
-		move[i].push_back(Marker::BL);
-		move[i].push_back(Marker::BR);
-		move[i].push_back(Marker::FL);
-		move[i].push_back(Marker::SR);
-		move[i].push_back(Marker::SL);
-		move[i].push_back(Marker::FR);
+		//move[i].push_back(Marker::C);
+		//move[i].push_back(Marker::BL);
+		//move[i].push_back(Marker::BR);
+		//move[i].push_back(Marker::FL);
+		//move[i].push_back(Marker::SR);
+		//move[i].push_back(Marker::SL);
+		//move[i].push_back(Marker::FR);
 	}
 }
 
@@ -511,6 +519,11 @@ void Application::checkPosition()
 	for(int j =0; j < posOK.size(); j++){
 
 		checker = checker && posOK.at(j);
+	}
+
+	if(checker && moveDone == false ){
+		Mix_PlayChannel(1, validate, 1);
+		moveDone = true;
 	}
 
 	std::cout << "Check Pos" << checker << std::endl;
