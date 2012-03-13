@@ -27,8 +27,10 @@ Application::Application()
 	, countdownStart(0)
 	, countdownCurrent(0)
 	, elapsed(-1.f)
-	, BPM_96(625.0)
-	, BPM_156(375.0)//384
+	, offsetStart(495)
+	, BPM_96(4*625.0)
+	, BPM_156(4*375.0)//384
+
 	, m_font(NULL)
 	, deltaTime(-1)
 	, validate(NULL)
@@ -120,8 +122,7 @@ void Application::init()
 	//sound init
 	bar = 0;
 	beat = 0;
-	deltaTime = BPM_96;
-
+	deltaTime = offsetStart;
 
 	//SDL_mixer
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
@@ -248,14 +249,14 @@ void Application::update()
 
 	// ======Compte à rebours du début
 	if(m_gameStarted && countDownPassed == false) countdownCurrent = clock();
-	if (countdownCurrent - countdownStart > 300 && countDownPassed == false){
+	if (countdownCurrent - countdownStart > 3000 && countDownPassed == false){
 
-		start = clock();
 		if(musique)
 		{
 			Mix_PlayChannel(0, musique, 1);
 		}
 		countDownPassed  = true;
+		start = clock();
 	}
 
 	// ====== Gestion de la musique et du score
@@ -271,15 +272,16 @@ void Application::update()
 			if(elapsed - deltaTime - depassement >0 )  depassement = elapsed - deltaTime - depassement;
 			else depassement = 0;
 
-			//std::cout << "Depassement " << depassement << std::endl;	
-
-			beat++;
-			 if(beat == 2)
+			std::cout << "Depassement " << depassement << std::endl;	
+		
+			if(bar == 1)
 			 {
 				 m_markersToDraw.clear();
 			 }
 			//Changement de mesure
+/*
 			if(beat == 5){
+			*/
 				if (bar < 77) bar++;
 				viewCountB = 0;
 				viewCountBL = 0; 
@@ -289,11 +291,12 @@ void Application::update()
 				viewCountFR = 0;
 				viewCountSL = 0;
 				viewCountSR = 0;
-				beat=1;
+				//beat=1;
 				std::cout << "mesure " << bar << std::endl;
 				moveDone = false;
-			}
+		//	}
 
+			if(bar == 1) deltaTime = BPM_96;
 			if(bar == 13) deltaTime = BPM_156;
 
 			//std::cout << "mesure " << bar;
@@ -304,13 +307,18 @@ void Application::update()
 		//MARQUE
 		/* check for object visibility */
 		//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
+		for(int p = 0; p<marker_num; p++){
+			printf("Marqueur vu : %d \n", m_marker_info[p].id);
+		}
+	
+
 		for( i = 0; i < move[bar].size(); i++ ) {
 			k = -1;
 			for( j = 0; j < marker_num; j++ ) {
 
 				if( move[bar].at(i) == m_marker_info[j].id ) {
 					/* you've found a pattern */
-					printf("Found pattern: %d ", m_marker_info[j].id);
+					printf("Found pattern: %d \n", m_marker_info[j].id);
 					switch(m_marker_info[j].id){
 
 					case C: {
@@ -355,6 +363,9 @@ void Application::update()
 						viewCountBL++;
 						break;
 							 }
+					default: {
+						printf("Marqueur non listé : %d", m_marker_info[j].id);
+								  }
 
 					};
 					printf("\n");
@@ -420,7 +431,7 @@ void Application::render()
 	{
 		drawText(m_windowsWidth/2, m_windowsHeight/2, green,  "GO!!" );
 	}
-
+	
 	// ===== Affichage des éléments graphiques lors de la détection d'un marqueur
 	drawMarkers();
 
@@ -552,8 +563,8 @@ void Application::initChoregraphy()
 
 	for(int i = 0; i < 77; i++)
 	{
-		move[i].push_back(Marker::B);
-		move[i].push_back(Marker::C);
+		//move[i].push_back(Marker::B);
+		//move[i].push_back(Marker::C);
 		//move[i].push_back(Marker::BL);
 		//move[i].push_back(Marker::BR);
 		//move[i].push_back(Marker::FL);
