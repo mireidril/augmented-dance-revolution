@@ -1,38 +1,39 @@
 #include "Application.hpp"
 
 Application::Application()
-: m_gameStarted(false)
-, m_screen(NULL)
-, m_camImage(NULL)
-, m_windowsWidth(800)
-, m_windowsHeight(600)
-, m_camImageWidth(-1)
-, m_camImageHeight(-1)
-, m_isRunning(true)
-, m_thres(50)
-, m_config(NULL)
-, m_marker_info(NULL)
-, viewCountB(0)
-, viewCountC(0)
-, viewCountBL(0)
-, viewCountSL(0)
-, viewCountFL(0)
-, viewCountSR(0)
-, viewCountFR(0)
-, viewCountBR(0)
-, bar(0)
-, beat(-1)
-, start(0)
-, end(0)
-, elapsed(-1.f)
-, BPM_96(625.0)
-, BPM_156(384.0)
-, m_font(NULL)
-, deltaTime(-1)
-, validate(NULL)
-, musique(NULL)
-, moveDone(false)
-, score(0)
+	: m_gameStarted(false)
+	, m_screen(NULL)
+	, m_camImage(NULL)
+	, m_windowsWidth(800)
+	, m_windowsHeight(600)
+	, m_camImageWidth(-1)
+	, m_camImageHeight(-1)
+	, m_isRunning(true)
+	, m_thres(50)
+	, m_config(NULL)
+	, m_marker_info(NULL)
+	, viewCountB(0)
+	, viewCountC(0)
+	, viewCountBL(0)
+	, viewCountSL(0)
+	, viewCountFL(0)
+	, viewCountSR(0)
+	, viewCountFR(0)
+	, viewCountBR(0)
+	, bar(0)
+	, beat(-1)
+	, start(0)
+	, end(0)
+	, elapsed(-1.f)
+	, BPM_96(625.0)
+	, BPM_156(384.0)
+	, m_font(NULL)
+	, deltaTime(-1)
+	, validate(NULL)
+	, musique(NULL)
+	, moveDone(false)
+	, countDownPassed(false)
+	, score(0)
 {
 
 }
@@ -40,7 +41,7 @@ Application::Application()
 Application::~Application()
 {
 	arVideoCapStop();
-    arVideoClose();
+	arVideoClose();
 
 	Mix_CloseAudio();
 	TTF_Quit();
@@ -77,39 +78,39 @@ void Application::init()
 	//SDL_ttf
 	TTF_Init();
 	m_font = TTF_OpenFont("../fonts/mvboli.ttf", 50);
-	
+
 	//Initialisation caméra
-	#ifdef _WIN32
-		char *vconf = "Data\\WDM_camera_flipV.xml";
-	#else
-		char *vconf = "";
-	#endif
+#ifdef _WIN32
+	char *vconf = "Data\\WDM_camera_flipV.xml";
+#else
+	char *vconf = "";
+#endif
 
 	ARParam  wparam;
-    // open the video path
-    if( arVideoOpen( vconf ) < 0 ) exit(0);
-    // find the size of the window
-    if( arVideoInqSize(&m_camImageWidth, &m_camImageHeight) < 0 ) exit(0);
-    printf("Image size (x,y) = (%d,%d)\n", m_camImageWidth, m_camImageHeight);
+	// open the video path
+	if( arVideoOpen( vconf ) < 0 ) exit(0);
+	// find the size of the window
+	if( arVideoInqSize(&m_camImageWidth, &m_camImageHeight) < 0 ) exit(0);
+	printf("Image size (x,y) = (%d,%d)\n", m_camImageWidth, m_camImageHeight);
 
-    // set the initial camera parameters
+	// set the initial camera parameters
 	char *cparam_name = "Data/camera_para.dat";
 	if( arParamLoad(cparam_name, 1, &wparam) < 0 ) {
-        printf("Camera parameter load error !!\n");
-        exit(0);
-    }
+		printf("Camera parameter load error !!\n");
+		exit(0);
+	}
 	ARParam cparam;
-    arParamChangeSize( &wparam, m_camImageWidth, m_camImageHeight, &cparam );
-    arInitCparam( &cparam );
-    printf("*** Camera Parameter ***\n");
-    arParamDisp( &cparam );
+	arParamChangeSize( &wparam, m_camImageWidth, m_camImageHeight, &cparam );
+	arInitCparam( &cparam );
+	printf("*** Camera Parameter ***\n");
+	arParamDisp( &cparam );
 
 	// New way multiple patterns
 	char *config_name = "Data/multi/marker.dat";
 	if( (m_config = arMultiReadConfigFile(config_name)) == NULL ) {
-        printf("config data load error !!\n");
-        exit(0);
-    }
+		printf("config data load error !!\n");
+		exit(0);
+	}
 
 	initChoregraphy();
 
@@ -117,19 +118,18 @@ void Application::init()
 	bar = 0;
 	beat = 0;
 	deltaTime = BPM_96;
-	
+
 
 	//SDL_mixer
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
-	
+
 	Mix_AllocateChannels(2);
 	musique = Mix_LoadWAV("../musics/queen.ogg");
 	validate = Mix_LoadWAV("../musics/validate.ogg");
-	
+
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
 
-	start = clock();
 }
 
 //Charge toutes les images de l'application
@@ -199,25 +199,26 @@ void Application::run()
 //Gère les opérations de l'application
 void Application::update()
 {
+
 	// ====== Gère les évènements SDL
 	checkEvents();
 
 	// ====== Récupère l'image filmée par la caméra
 	ARUint8         *dataPtr;
-    int             marker_num;
-    int             i, j, k;
+	int             marker_num;
+	int             i, j, k;
 
-    // grab a vide frame
-    if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
-        arUtilSleep(2);
-        return;
-    }
+	// grab a vide frame
+	if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
+		arUtilSleep(2);
+		return;
+	}
 
 	//mirror the image camera
 	int sizeX, sizeY;
 	arVideoInqSize(&sizeX, &sizeY);
 	ARUint8 * dataPtrFlipped = new ARUint8[sizeX*sizeY*AR_PIX_SIZE_DEFAULT];
-	
+
 	for(int i = 0; i < sizeY; ++i)
 	{
 		for(int j = 0, k = (sizeX * AR_PIX_SIZE_DEFAULT) - AR_PIX_SIZE_DEFAULT; j < sizeX * AR_PIX_SIZE_DEFAULT; j += AR_PIX_SIZE_DEFAULT, k-=AR_PIX_SIZE_DEFAULT)
@@ -237,51 +238,67 @@ void Application::update()
 	amask = 0x000000ff;
 	m_camImage = SDL_CreateRGBSurfaceFrom(dataPtrFlipped, sizeX, sizeY, 8 * AR_PIX_SIZE_DEFAULT, sizeX * AR_PIX_SIZE_DEFAULT, rmask, gmask, bmask, amask);
 
-    // detect the markers in the video frame 
+	// detect the markers in the video frame 
 	if( arDetectMarker(dataPtr, m_thres, &m_marker_info, &marker_num) < 0 ) {
 		exit(0);
-    }
+	}
+
+	// ======Compte à rebours du début
+	if(m_gameStarted && countDownPassed == false) countdownCurrent = clock();
+	if (countdownCurrent - countdownStart > 3000 && countDownPassed == false){
+
+	
+		start = clock();
+		if(musique)
+		{
+			Mix_PlayChannel(0, musique, 1);
+		}
+		start = clock();
+		countDownPassed  = true;
+	}
 
 	// ====== Gestion de la musique et du score
-	if(m_gameStarted == true)
+	if(m_gameStarted == true && countDownPassed)
 	{
 		end = clock();
 		elapsed = ((double)end - start);
 		
 		if(elapsed >= deltaTime){
-		 
-			 beat++;
+
+			start = end;
+
+			beat++;
 			 if(beat == 2)
 			 {
 				 m_markersToDraw.clear();
 			 }
-			 //Changement de mesure
-			 if(beat == 5){
-				 if (bar < 77) bar++;
-				 viewCountB = 0;
-				 viewCountBL = 0; 
-				 viewCountBR = 0;
-				 viewCountC = 0;
-				 viewCountFL = 0;
-				 viewCountFR = 0;
-				 viewCountSL = 0;
-				 viewCountSR = 0;
-				 beat=1;
-				 std::cout << "mesure " << bar << std::endl;
-				 moveDone = false;
-			 }
-	
-		if(bar == 13) deltaTime = BPM_156;
+			//Changement de mesure
+			if(beat == 5){
+				if (bar < 77) bar++;
+				viewCountB = 0;
+				viewCountBL = 0; 
+				viewCountBR = 0;
+				viewCountC = 0;
+				viewCountFL = 0;
+				viewCountFR = 0;
+				viewCountSL = 0;
+				viewCountSR = 0;
+				beat=1;
+				//std::cout << "mesure " << bar << std::endl;
+				moveDone = false;
+			}
+
+			if(bar == 13) deltaTime = BPM_156;
 
 			// std::cout << "mesure " << bar;
 			// std::cout << "beat " << beat << std::endl;
-			 start = end;
-		 }
+			
+		}
 
 		//MARQUE
 		/* check for object visibility */
 		//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
- 		for( i = 0; i < move[bar].size(); i++ ) {
+		for( i = 0; i < move[bar].size(); i++ ) {
 			k = -1;
 			for( j = 0; j < marker_num; j++ ) {
 
@@ -294,19 +311,19 @@ void Application::update()
 						printf("Chest"); 
 						viewCountC++;
 						break;	
-						};
-				
+							};
+
 					case B: {
 						printf("Back");
 						viewCountB++;
 						break;
-					}
+							}
 					case SR: {
-					
+
 						printf("Shoulder Right");
 						viewCountSR++;
 						break;
-					}
+							 }
 					case SL: {
 						printf("Shoulder Left"); 
 						viewCountSL++;
@@ -318,10 +335,10 @@ void Application::update()
 						break;
 							 }
 					case BR: {
-							printf("Hand Right Back"); 
-							viewCountBR++;
-							break;
-						}
+						printf("Hand Right Back"); 
+						viewCountBR++;
+						break;
+							 }
 					case FL: {
 						printf("Hand Left Front"); 
 						viewCountFL++;
@@ -331,7 +348,7 @@ void Application::update()
 						printf("Hand Left Back"); 
 						viewCountBL++;
 						break;
-						 }
+							 }
 
 					};
 					printf("\n");
@@ -345,7 +362,7 @@ void Application::update()
 				continue;
 			}
 
-		
+
 			checkPosition();
 
 			/* calculate the transform for each marker */
@@ -356,7 +373,7 @@ void Application::update()
 				arGetTransMatCont(&m_marker_info[k], m_config->marker[i].trans, m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
 			}
 			m_config->marker[i].visible = 1;
-		
+
 		}
 	}
 
@@ -372,7 +389,7 @@ void Application::render()
 	// ===== Affichage de l'image filmée par la caméra
 	float zoomX = (float)m_windowsWidth / m_camImageWidth;
 	float zoomY = (float)m_windowsWidth*0.75 / m_camImageHeight;
-	
+
 	if(m_camImage != NULL)
 	{
 		SDL_Surface * camImage = rotozoomSurfaceXY(m_camImage, 0.0f, zoomX, zoomY, 1);
@@ -395,7 +412,7 @@ void Application::render()
 	strcpy(scoreFinal,"Score : ");
 	sprintf (scoreChar, "%d", score);
 	strcat(scoreFinal,scoreChar);
-	
+
 	drawText(600, 20, green, scoreFinal);
 
 	// ===== Affichage des élements de la chorégraphie
@@ -422,13 +439,13 @@ void Application::drawMarker(int idMarker)
 	SDL_Rect pos;
 	pos.x = (m_marker_info[idMarker].vertex[0][0] + m_marker_info[idMarker].vertex[1][0] + m_marker_info[idMarker].vertex[2][0] + m_marker_info[idMarker].vertex[3][0]) / 4;
 	pos.y = (m_marker_info[idMarker].vertex[0][1] + m_marker_info[idMarker].vertex[1][1] + m_marker_info[idMarker].vertex[2][1] + m_marker_info[idMarker].vertex[3][1]) / 4;
-	
+
 	//int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
 	//int maxZ = 1500;
 	//double rapport = (maxZ-z)/maxZ;
 	//float zoomX = (float) (m_images[0]->m_size->x * rapport) / m_images[0]->m_size->x;
 	//float zoomY = (float) (m_images[0]->m_size->y * rapport) / m_images[0]->m_size->y;
-	
+
 	SDL_Surface * img = rotozoomSurfaceXY(m_images[0]->m_image, 0.0f, 1.0, 1.0, 1);
 	SDL_BlitSurface(img, NULL, m_screen, &pos);
 	SDL_FreeSurface(img);
@@ -480,32 +497,30 @@ void Application::checkEvents()
 	{
 		switch (event.type)
 		{
-			case SDL_QUIT:
+		case SDL_QUIT:
+			m_isRunning = false;
+			break;
+		case SDL_VIDEORESIZE:
+			m_windowsWidth = event.resize.w;
+			m_windowsHeight = event.resize.h;
+			m_screen = SDL_SetVideoMode(m_windowsWidth, m_windowsHeight, 32, SDL_VIDEORESIZE | SDL_DOUBLEBUF);
+			break;
+		case SDL_KEYDOWN:
+			switch(event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
 				m_isRunning = false;
 				break;
-			case SDL_VIDEORESIZE:
-				m_windowsWidth = event.resize.w;
-				m_windowsHeight = event.resize.h;
-				m_screen = SDL_SetVideoMode(m_windowsWidth, m_windowsHeight, 32, SDL_VIDEORESIZE | SDL_DOUBLEBUF);
-				break;
-			case SDL_KEYDOWN:
-				switch(event.key.keysym.sym)
+			case SDLK_RETURN:
+				if(!m_gameStarted)
 				{
-					case SDLK_ESCAPE:
-						m_isRunning = false;
-						break;
-					case SDLK_RETURN:
-						if(!m_gameStarted)
-						{
-							m_gameStarted = true;
-							if(musique)
-							{
-								Mix_PlayChannel(0, musique, 1);
-							}
-						}
-						break;
+					countdownStart = clock();
+					m_gameStarted = true;
+
 				}
 				break;
+			}
+			break;
 		}
 	}
 }
@@ -554,21 +569,21 @@ void Application::checkPosition()
 	while(i < move[bar].size()){
 
 		switch(move[bar].at(i)){
-			case C : 
-				if(viewCountC > threshold) posOK.push_back(true);
-				else posOK.push_back(false);
-				break;
-			case B : 
-				if(viewCountB > threshold) posOK.push_back(true);
-				else posOK.push_back(false);
-				break;
-			case BL : 
-				if(viewCountBL > threshold) posOK.push_back(true);
-				else posOK.push_back(false);
-				break;
+		case C : 
+			if(viewCountC > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case B : 
+			if(viewCountB > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case BL : 
+			if(viewCountBL > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
 		}//end switch
 
-	i++;
+		i++;
 	}//end while
 
 	bool checker= true;
