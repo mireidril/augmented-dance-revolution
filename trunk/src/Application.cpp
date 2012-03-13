@@ -247,10 +247,14 @@ void Application::update()
 	{
 		end = clock();
 		elapsed = ((double)end - start);
-
+		
 		if(elapsed >= deltaTime){
 		 
 			 beat++;
+			 if(beat == 2)
+			 {
+				 m_markersToDraw.clear();
+			 }
 			 //Changement de mesure
 			 if(beat == 5){
 				 if (bar < 77) bar++;
@@ -381,20 +385,7 @@ void Application::render()
 	}
 
 	// ===== Affichage des éléments graphiques lors de la détection d'un marqueur
-	if(m_gameStarted)
-	{
-		int     i;
-		double  gl_para[16];
-
-		// calculate the viewing parameters - gl_para
-		for( i = 0; i < m_config->marker_num; i++ )
-		{
-			if( m_config->marker[i].visible == 1 )
-			{
-				//drawMarker(i);
-			}
-		}
-	}
+	drawMarkers();
 
 	// ===== Affichage des textes
 	SDL_Color green = {0, 255, 0};
@@ -415,13 +406,22 @@ void Application::render()
 	SDL_UpdateRect(m_screen, 0, 0, m_windowsWidth, m_windowsHeight);
 }
 
+//Dessine des images sur les marqueurs de m_markersToDraw
+void Application::drawMarkers()
+{
+	for(int i = 0; i < m_markersToDraw.size(); ++i)
+	{
+		drawMarker(m_markersToDraw[i]);
+	}
+}
+
 //Dessine une image à la position du marqueur idMarker
 void Application::drawMarker(int idMarker)
 {
 	//Récupération des coordonnées du marqueur sur l'image
 	SDL_Rect pos;
-	pos.x = (m_marker_info->vertex[0][0] + m_marker_info->vertex[1][0] + m_marker_info->vertex[2][0] + m_marker_info->vertex[3][0]) / 4;
-	pos.y = (m_marker_info->vertex[0][1] + m_marker_info->vertex[1][1] + m_marker_info->vertex[2][1] + m_marker_info->vertex[3][1]) / 4;
+	pos.x = (m_marker_info[idMarker].vertex[0][0] + m_marker_info[idMarker].vertex[1][0] + m_marker_info[idMarker].vertex[2][0] + m_marker_info[idMarker].vertex[3][0]) / 4;
+	pos.y = (m_marker_info[idMarker].vertex[0][1] + m_marker_info[idMarker].vertex[1][1] + m_marker_info[idMarker].vertex[2][1] + m_marker_info[idMarker].vertex[3][1]) / 4;
 	
 	//int z = abs(m_config->marker[idMarker].trans[2][2] - 200);
 	//int maxZ = 1500;
@@ -519,7 +519,7 @@ void Application::initChoregraphy()
 	for(int i = 0; i < 77; i++)
 	{
 		move[i].push_back(Marker::B);
-		//move[i].push_back(Marker::C);
+		move[i].push_back(Marker::C);
 		//move[i].push_back(Marker::BL);
 		//move[i].push_back(Marker::BR);
 		//move[i].push_back(Marker::FL);
@@ -578,9 +578,13 @@ void Application::checkPosition()
 	}
 
 	if(checker && moveDone == false ){
+
 		Mix_PlayChannel(1, validate, 1);
 		score += 100;
-
+		for(int i = 0; i < move[bar].size(); ++i)
+		{
+			m_markersToDraw.push_back(move[bar].at(i));
+		}
 		moveDone = true;
 	}
 

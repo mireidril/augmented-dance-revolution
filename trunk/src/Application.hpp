@@ -67,6 +67,8 @@ class Application
 		//Gère le rendu de l'application
 		void render();
 
+		//Dessine des images sur les marqueurs de m_markersToDraw
+		void drawMarkers();
 		//Dessine une image à la position du marqueur idMarker
 		void drawMarker(int idMarker);
 		//Dessine le texte s à la position (x, y) de la fenêtre
@@ -98,6 +100,7 @@ class Application
 		//Stocke la liste des marqueur à identifier en fonction de la mesure courante du morceau
 		std::vector<Marker>				move[77];
 		std::vector<int>				imagesMove;
+		std::vector<int>				m_markersToDraw;
 
 		//viewCount stocke le nombre de fois qu'un marqueur a été vu dans une mesure 
 		unsigned int					viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;
