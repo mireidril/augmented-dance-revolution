@@ -76,7 +76,7 @@ void Application::init()
 
 	//SDL_ttf
 	TTF_Init();
-	m_font = TTF_OpenFont("../fonts/mvboli.ttf", 100);
+	m_font = TTF_OpenFont("../fonts/mvboli.ttf", 50);
 	
 	//Initialisation caméra
 	#ifdef _WIN32
@@ -118,6 +118,7 @@ void Application::init()
 	beat = 0;
 	deltaTime = BPM_96;
 	
+
 	//SDL_mixer
 	if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		std::cout<<"problem init son"<<std::endl; //Initialisation de l'API Mixer
@@ -395,7 +396,18 @@ void Application::render()
 		}
 	}
 
+	// ===== Affichage des textes
+	SDL_Color green = {0, 255, 0};
+	drawText(500, 200, green, "Hello!");
+	if(moveDone) drawText(20, 10, green, "+100!");
+	char scoreFinal[256];
+	char scoreChar[50];
+	strcpy(scoreFinal,"Score : ");
+	sprintf (scoreChar, "%d", score);
+	strcat(scoreFinal,scoreChar);
 	
+	drawText(500, 20, green, scoreFinal);
+
 	// ===== Affichage des élements de la chorégraphie
 	updateInterface();
 
@@ -568,6 +580,8 @@ void Application::checkPosition()
 
 	if(checker && moveDone == false ){
 		Mix_PlayChannel(1, validate, 1);
+		score += 100;
+
 		moveDone = true;
 	}
 
