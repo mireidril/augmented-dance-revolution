@@ -110,6 +110,7 @@ class Application
 		double							elapsed;
 		const double					BPM_96;
 		const double					BPM_156;
+		const double					offsetStart;
 		Mix_Chunk*						validate;
 		Mix_Chunk*						musique;
 		bool							moveDone, countDownPassed;
