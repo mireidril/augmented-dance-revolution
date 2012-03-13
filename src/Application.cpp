@@ -1,7 +1,8 @@
 #include "Application.hpp"
 
 Application::Application()
-: m_screen(NULL)
+: m_gameStarted(false)
+, m_screen(NULL)
 , m_camImage(NULL)
 , m_windowsWidth(800)
 , m_windowsHeight(600)
@@ -126,13 +127,6 @@ void Application::init()
 	validate = Mix_LoadWAV("../musics/validate.ogg");
 	
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
-	if(musique == NULL){
-		std::cout<<"musique non jouée"<<std::endl;
-	}
-	else
-	{
-		Mix_PlayChannel(0, musique, 1);
-	}
 
 	start = clock();
 }
@@ -140,6 +134,8 @@ void Application::init()
 //Charge toutes les images de l'application
 void Application::initImages()
 {
+	//Images Great !
+	loadImage("../images/great!.png", 0, 0, 237, 111);
 	//Images des silhouettes
 	loadImage("../images/fond.png", 0, m_windowsHeight, 731, 141);
 	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 125, 141);
@@ -170,15 +166,18 @@ void Application::updateInterface()
 {
 	int nbImagesShowed = 5;
 	// ===== Affichage de l'interface
-	drawImage(0, NULL, &m_windowsHeight);
+	drawImage(1, NULL, &m_windowsHeight);
 	// ===== Affichage des silhouettes
-	int xBase = 10, x;
-	for(int i = 0; i < nbImagesShowed; ++i)
+	if(m_gameStarted)
 	{
-		x = xBase + 150*i + 20;
-		if(bar+i < imagesMove.size())
+		int xBase = 10, x;
+		for(int i = 0; i < nbImagesShowed; ++i)
 		{
-			drawImage(imagesMove[bar+i], &x, &m_windowsHeight);
+			x = xBase + 150*i + 20;
+			if(bar+i < imagesMove.size())
+			{
+				drawImage(imagesMove[bar+i], &x, &m_windowsHeight);
+			}
 		}
 	}
 }
@@ -243,114 +242,117 @@ void Application::update()
     }
 
 	// ====== Gestion de la musique et du score
-	end = clock();
-	elapsed = ((double)end - start);
+	if(m_gameStarted == true)
+	{
+		end = clock();
+		elapsed = ((double)end - start);
 
-	if(elapsed >= deltaTime){
+		if(elapsed >= deltaTime){
 		 
-		 beat++;
-		 //Changement de mesure
-		 if(beat == 5){
-			 if (bar < 77) bar++;
-			 viewCountB = 0;
-			 viewCountBL = 0; 
-			 viewCountBR = 0;
-			 viewCountC = 0;
-			 viewCountFL = 0;
-			 viewCountFR = 0;
-			 viewCountSL = 0;
-			 viewCountSR = 0;
-			 beat=1;
-			 std::cout << "mesure " << bar << std::endl;
-			 moveDone = false;
-		 }
+			 beat++;
+			 //Changement de mesure
+			 if(beat == 5){
+				 if (bar < 77) bar++;
+				 viewCountB = 0;
+				 viewCountBL = 0; 
+				 viewCountBR = 0;
+				 viewCountC = 0;
+				 viewCountFL = 0;
+				 viewCountFR = 0;
+				 viewCountSL = 0;
+				 viewCountSR = 0;
+				 beat=1;
+				 std::cout << "mesure " << bar << std::endl;
+				 moveDone = false;
+			 }
 	
-	if(bar == 13) deltaTime = BPM_156;
+		if(bar == 13) deltaTime = BPM_156;
 
-		// std::cout << "mesure " << bar;
-		// std::cout << "beat " << beat << std::endl;
-		 start = end;
-	 }
+			// std::cout << "mesure " << bar;
+			// std::cout << "beat " << beat << std::endl;
+			 start = end;
+		 }
 
-	//MARQUE
-	/* check for object visibility */
-	//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
- 	for( i = 0; i < move[bar].size(); i++ ) {
-		k = -1;
-		for( j = 0; j < marker_num; j++ ) {
+		//MARQUE
+		/* check for object visibility */
+		//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
+ 		for( i = 0; i < move[bar].size(); i++ ) {
+			k = -1;
+			for( j = 0; j < marker_num; j++ ) {
 
-			if( move[bar].at(i) == m_marker_info[j].id ) {
-				/* you've found a pattern */
-				printf("Found pattern: %d ", m_marker_info[j].id);
-				switch(m_marker_info[j].id){
+				if( move[bar].at(i) == m_marker_info[j].id ) {
+					/* you've found a pattern */
+					printf("Found pattern: %d ", m_marker_info[j].id);
+					switch(m_marker_info[j].id){
 
-				case C: {
-					printf("Chest"); 
-					viewCountC++;
-					break;	
-					};
+					case C: {
+						printf("Chest"); 
+						viewCountC++;
+						break;	
+						};
 				
-				case B: {
-					printf("Back");
-					viewCountB++;
-					break;
-				}
-				case SR: {
-					
-					printf("Shoulder Right");
-					viewCountSR++;
-					break;
-				}
-				case SL: {
-					printf("Shoulder Left"); 
-					viewCountSL++;
-					break;
-						 }
-				case FR: {
-					printf("Hand Right Front"); 
-					viewCountFR++;
-					break;
-						 }
-				case BR: {
-						printf("Hand Right Back"); 
-						viewCountBR++;
+					case B: {
+						printf("Back");
+						viewCountB++;
 						break;
 					}
-				case FL: {
-					printf("Hand Left Front"); 
-					viewCountFL++;
-					break;
+					case SR: {
+					
+						printf("Shoulder Right");
+						viewCountSR++;
+						break;
+					}
+					case SL: {
+						printf("Shoulder Left"); 
+						viewCountSL++;
+						break;
+							 }
+					case FR: {
+						printf("Hand Right Front"); 
+						viewCountFR++;
+						break;
+							 }
+					case BR: {
+							printf("Hand Right Back"); 
+							viewCountBR++;
+							break;
+						}
+					case FL: {
+						printf("Hand Left Front"); 
+						viewCountFL++;
+						break;
+							 }
+					case BL: {
+						printf("Hand Left Back"); 
+						viewCountBL++;
+						break;
 						 }
-				case BL: {
-					printf("Hand Left Back"); 
-					viewCountBL++;
-					break;
-					 }
 
-				};
-				printf("\n");
-				if( k == -1 ) k = j;
-				else if( m_marker_info[k].cf < m_marker_info[j].cf ) k = j;
+					};
+					printf("\n");
+					if( k == -1 ) k = j;
+					else if( m_marker_info[k].cf < m_marker_info[j].cf ) k = j;
+				}
 			}
-		}
 
-		if( k == -1 ) {
-			m_config->marker[i].visible = 0;
-			continue;
-		}
+			if( k == -1 ) {
+				m_config->marker[i].visible = 0;
+				continue;
+			}
 
 		
-		checkPosition();
+			checkPosition();
 
-		/* calculate the transform for each marker */
-		if( m_config->marker[i].visible == 0 ) {
-            arGetTransMat(&m_marker_info[k], m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
-        }
-        else {
-            arGetTransMatCont(&m_marker_info[k], m_config->marker[i].trans, m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
-        }
-        m_config->marker[i].visible = 1;
+			/* calculate the transform for each marker */
+			if( m_config->marker[i].visible == 0 ) {
+				arGetTransMat(&m_marker_info[k], m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
+			}
+			else {
+				arGetTransMatCont(&m_marker_info[k], m_config->marker[i].trans, m_config->marker[i].center, m_config->marker[i].width, m_config->marker[i].trans);
+			}
+			m_config->marker[i].visible = 1;
 		
+		}
 	}
 
 	render();
@@ -378,18 +380,22 @@ void Application::render()
 	}
 
 	// ===== Affichage des éléments graphiques lors de la détection d'un marqueur
-	int     i;
-    double  gl_para[16];
-
-    // calculate the viewing parameters - gl_para
-	for( i = 0; i < m_config->marker_num; i++ )
+	if(m_gameStarted)
 	{
-        if( m_config->marker[i].visible == 1 )
-		{
-			drawMarker(i);
-		}
-    }
+		int     i;
+		double  gl_para[16];
 
+		// calculate the viewing parameters - gl_para
+		for( i = 0; i < m_config->marker_num; i++ )
+		{
+			if( m_config->marker[i].visible == 1 )
+			{
+				//drawMarker(i);
+			}
+		}
+	}
+
+	
 	// ===== Affichage des élements de la chorégraphie
 	updateInterface();
 
@@ -477,6 +483,16 @@ void Application::checkEvents()
 					case SDLK_ESCAPE:
 						m_isRunning = false;
 						break;
+					case SDLK_RETURN:
+						if(!m_gameStarted)
+						{
+							m_gameStarted = true;
+							if(musique)
+							{
+								Mix_PlayChannel(0, musique, 1);
+							}
+						}
+						break;
 				}
 				break;
 		}
@@ -502,23 +518,20 @@ void Application::initChoregraphy()
 	}
 
 	//Ici on remplit les images des choregraphies
-	imagesMove.push_back(1);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(1);
-	imagesMove.push_back(2);
-	imagesMove.push_back(1);
+	imagesMove.push_back(3);
 }
 
 void Application::checkPosition()
