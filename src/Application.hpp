@@ -106,13 +106,13 @@ class Application
 		unsigned int					viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;
 
 		unsigned int					bar, beat, score;
-		clock_t							start, end;
+		clock_t							start, end, countdownStart, countdownCurrent;
 		double							elapsed;
 		const double					BPM_96;
 		const double					BPM_156;
 		Mix_Chunk*						validate;
 		Mix_Chunk*						musique;
-		bool							moveDone;
+		bool							moveDone, countDownPassed;
 
 		//Score
 		TTF_Font *						m_font;
