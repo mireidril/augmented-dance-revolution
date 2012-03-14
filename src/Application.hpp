@@ -101,6 +101,8 @@ class Application
 		std::vector<Marker>				move[77];
 		std::vector<int>				imagesMove;
 		std::vector<int>				m_markersToDraw;
+		//Nb de marqueurs détectés à l'écran
+		int								marker_num;
 
 		//viewCount stocke le nombre de fois qu'un marqueur a été vu dans une mesure 
 		unsigned int					viewCountB, viewCountC, viewCountBL, viewCountSL, viewCountFL, viewCountSR, viewCountFR, viewCountBR;
