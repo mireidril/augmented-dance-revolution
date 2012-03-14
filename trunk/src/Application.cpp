@@ -140,11 +140,11 @@ void Application::init()
 void Application::initImages()
 {
 	//Images Great !
-	loadImage("../images/great!.png", 0, 0, 237, 111);
+	loadImage("../images/awesome.png", 0, 0, 237, 111);
 	//Images des silhouettes
 	loadImage("../images/fond.png", 0, m_windowsHeight, 731, 141);
-	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 125, 141);
-	loadImage("../images/silhouette2.png", 0, m_windowsHeight, 125, 141);
+	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 300, 150);
+	loadImage("../images/silhouette2.png", 0, m_windowsHeight, 300, 150);
 
 	//loadImage("../images/test.jpg", 0, 0, 512, 512, 30, 30);
 }
@@ -209,7 +209,6 @@ void Application::update()
 
 	// ====== Récupère l'image filmée par la caméra
 	ARUint8         *dataPtr;
-	int             marker_num;
 	int             i, j, k;
 
 	// grab a vide frame
@@ -243,7 +242,7 @@ void Application::update()
 	m_camImage = SDL_CreateRGBSurfaceFrom(dataPtrFlipped, sizeX, sizeY, 8 * AR_PIX_SIZE_DEFAULT, sizeX * AR_PIX_SIZE_DEFAULT, rmask, gmask, bmask, amask);
 
 	// detect the markers in the video frame 
-	if( arDetectMarker(dataPtr, m_thres, &m_marker_info, &marker_num) < 0 ) {
+	if( arDetectMarker(dataPtrFlipped, m_thres, &m_marker_info, &marker_num) < 0 ) {
 		exit(0);
 	}
 
@@ -264,6 +263,10 @@ void Application::update()
 	{
 		end = clock();
 		elapsed = ((double)end - start);
+		if(elapsed > 500)
+		{
+			m_markersToDraw.clear();
+		}
 
 		if(elapsed >= deltaTime-depassement){
 
@@ -272,12 +275,8 @@ void Application::update()
 			if(elapsed - deltaTime - depassement >0 )  depassement = elapsed - deltaTime - depassement;
 			else depassement = 0;
 
-			std::cout << "Depassement " << depassement << std::endl;	
+			//std::cout << "Depassement " << depassement << std::endl;	
 		
-			if(bar == 1)
-			 {
-				 m_markersToDraw.clear();
-			 }
 			//Changement de mesure
 /*
 			if(beat == 5){
@@ -307,9 +306,9 @@ void Application::update()
 		//MARQUE
 		/* check for object visibility */
 		//Detecte les marqueurs présents dans move[] en fonction de la mesure du morceau
-		for(int p = 0; p<marker_num; p++){
+		/*for(int p = 0; p<marker_num; p++){
 			printf("Marqueur vu : %d \n", m_marker_info[p].id);
-		}
+		}*/
 	
 
 		for( i = 0; i < move[bar].size(); i++ ) {
@@ -427,7 +426,7 @@ void Application::render()
 		itoa(chrono, s, 10);
 		drawText(m_windowsWidth/2, m_windowsHeight/2, green,  s );
 	}
-	else if(countdownCurrent - countdownStart > 3000 && bar == 0 && beat < 2)
+	else if(countdownCurrent - countdownStart > 3000 && bar == 0 && elapsed < 2)
 	{
 		drawText(m_windowsWidth/2, m_windowsHeight/2, green,  "GO!!" );
 	}
@@ -456,9 +455,16 @@ void Application::render()
 //Dessine des images sur les marqueurs de m_markersToDraw
 void Application::drawMarkers()
 {
+	int idConfig = -1;
 	for(int i = 0; i < m_markersToDraw.size(); ++i)
 	{
-		drawMarker(m_markersToDraw[i]);
+		for(int j = 0; j < marker_num; ++j)
+		{
+			if(m_marker_info[j].id == m_markersToDraw[i])
+			{
+				drawMarker(j);
+			}
+		}
 	}
 }
 
@@ -541,6 +547,7 @@ void Application::checkEvents()
 			case SDLK_ESCAPE:
 				m_isRunning = false;
 				break;
+			case SDLK_SPACE:
 			case SDLK_RETURN:
 				if(!m_gameStarted)
 				{
@@ -567,7 +574,7 @@ void Application::initChoregraphy()
 		//move[i].push_back(Marker::C);
 		//move[i].push_back(Marker::BL);
 		//move[i].push_back(Marker::BR);
-		//move[i].push_back(Marker::FL);
+		move[i].push_back(Marker::FL);
 		//move[i].push_back(Marker::SR);
 		//move[i].push_back(Marker::SL);
 		//move[i].push_back(Marker::FR);
@@ -625,6 +632,26 @@ void Application::checkPosition()
 			if(viewCountBL > threshold) posOK.push_back(true);
 			else posOK.push_back(false);
 			break;
+		case BR : 
+			if(viewCountBR > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case SL : 
+			if(viewCountSL > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case SR : 
+			if(viewCountSR > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case FR : 
+			if(viewCountFR > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
+		case FL : 
+			if(viewCountFL > threshold) posOK.push_back(true);
+			else posOK.push_back(false);
+			break;
 		}//end switch
 
 		i++;
@@ -647,5 +674,5 @@ void Application::checkPosition()
 		moveDone = true;
 	}
 
-	std::cout << "Check Pos" << checker << std::endl;
+	//std::cout << "Check Pos" << checker << std::endl;
 }
