@@ -140,11 +140,20 @@ void Application::init()
 void Application::initImages()
 {
 	//Images Great !
-	loadImage("../images/awesome.png", 0, 0, 237, 111);
+	loadImage("../images/Great.png", 0, 0, 157, 53);
 	//Images des silhouettes
 	loadImage("../images/fond.png", 0, m_windowsHeight, 731, 141);
-	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 300, 150);
-	loadImage("../images/silhouette2.png", 0, m_windowsHeight, 300, 150);
+	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette2.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette3.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette4.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette5.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette6.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette7.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette8.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette9.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette10.png", 0, m_windowsHeight, 228, 300);
+	loadImage("../images/silhouette11.png", 0, m_windowsHeight, 228, 300);
 
 	//loadImage("../images/test.jpg", 0, 0, 512, 512, 30, 30);
 }
@@ -567,7 +576,8 @@ void Application::initChoregraphy()
 	//77 = nombre de mesures du morceau (+ ou -)
 	//* 4 = signature rythmique du morceau. 
 	//Avec le tableau move on peut potentiellement faire un chagement de mouvement à chaque temps du morceau
-
+	int marker = 2;
+	int markerID = 0;
 	for(int i = 0; i < 77; i++)
 	{
 		//move[i].push_back(Marker::B);
@@ -578,10 +588,16 @@ void Application::initChoregraphy()
 		//move[i].push_back(Marker::SR);
 		//move[i].push_back(Marker::SL);
 		//move[i].push_back(Marker::FR);
+		
+		//TEST pour avoir toutes les images des chorés
+		imagesMove.push_back(marker);
+		marker ++;
+		if( marker == 11 )
+			marker = 2;
 	}
 
 	//Ici on remplit les images des choregraphies
-	imagesMove.push_back(2);
+	/*imagesMove.push_back(2);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
@@ -608,7 +624,7 @@ void Application::initChoregraphy()
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
+	imagesMove.push_back(3);*/
 }
 
 void Application::checkPosition()
