@@ -140,7 +140,9 @@ void Application::init()
 void Application::initImages()
 {
 	//Images Great !
-	loadImage("../images/Great.png", 0, 0, 157, 53);
+	//loadImage("../images/Great.png", 0, 0, 157, 53);
+	loadImage("../images/awesome.png", 0, 0, 285, 74);
+	
 	//Images des silhouettes
 	loadImage("../images/fond.png", 0, m_windowsHeight, 731, 141);
 	loadImage("../images/silhouette1.png", 0, m_windowsHeight, 228, 300);
@@ -180,14 +182,14 @@ void Application::updateInterface()
 {
 	int nbImagesShowed = 5;
 	// ===== Affichage de l'interface
-	drawImage(1, NULL, &m_windowsHeight);
+	//drawImage(1, NULL, &m_windowsHeight);
 	// ===== Affichage des silhouettes
 	if(m_gameStarted)
 	{
 		int xBase = 10, x;
 		for(int i = 0; i < nbImagesShowed; ++i)
 		{
-			x = xBase + 150*i + 20;
+			x = xBase + 250*i + 50;
 			if(bar+i < imagesMove.size())
 			{
 				drawImage(imagesMove[bar+i], &x, &m_windowsHeight);
@@ -290,7 +292,7 @@ void Application::update()
 /*
 			if(beat == 5){
 			*/
-				if (bar < 77) bar++;
+				if (bar < 76) bar++;
 				viewCountB = 0;
 				viewCountBL = 0; 
 				viewCountBR = 0;
@@ -491,6 +493,11 @@ void Application::drawMarker(int idMarker)
 	//float zoomX = (float) (m_images[0]->m_size->x * rapport) / m_images[0]->m_size->x;
 	//float zoomY = (float) (m_images[0]->m_size->y * rapport) / m_images[0]->m_size->y;
 
+	int zoomX = ( (float)m_windowsWidth / m_camImageWidth );
+	int zoomY = ( (float)m_windowsWidth*0.75 / m_camImageHeight );
+	pos.x *= zoomX;
+	pos.y *= zoomY;
+
 	SDL_Surface * img = rotozoomSurfaceXY(m_images[0]->m_image, 0.0f, 1.0, 1.0, 1);
 	SDL_BlitSurface(img, NULL, m_screen, &pos);
 	SDL_FreeSurface(img);
@@ -578,53 +585,184 @@ void Application::initChoregraphy()
 	//Avec le tableau move on peut potentiellement faire un chagement de mouvement à chaque temps du morceau
 	int marker = 2;
 	int markerID = 0;
-	for(int i = 0; i < 77; i++)
-	{
-		//move[i].push_back(Marker::B);
-		//move[i].push_back(Marker::C);
-		//move[i].push_back(Marker::BL);
-		//move[i].push_back(Marker::BR);
-		move[i].push_back(Marker::FL);
-		//move[i].push_back(Marker::SR);
-		//move[i].push_back(Marker::SL);
-		//move[i].push_back(Marker::FR);
-		
-		//TEST pour avoir toutes les images des chorés
-		imagesMove.push_back(marker);
-		marker ++;
-		if( marker == 11 )
-			marker = 2;
-	}
+
+
+
+	move[0].push_back(Marker::C);
+	move[1].push_back(Marker::C);
+	move[2].push_back(Marker::FL); move[2].push_back(Marker::FR);
+	move[3].push_back(Marker::FL); move[3].push_back(Marker::FR);
+	move[4].push_back(Marker::BL); move[4].push_back(Marker::BR);
+	move[5].push_back(Marker::BL); move[5].push_back(Marker::BR);
+	move[6].push_back(Marker::FL); move[6].push_back(Marker::FR);
+	move[7].push_back(Marker::FL); move[7].push_back(Marker::FR);
+	move[8].push_back(Marker::C);
+	move[9].push_back(Marker::C);
+
+	move[10].push_back(Marker::B);
+	move[11].push_back(Marker::SL);
+	move[12].push_back(Marker::SL);
+	move[13].push_back(Marker::SR);
+	move[14].push_back(Marker::SR);
+	move[15].push_back(Marker::B);
+	move[16].push_back(Marker::C);
+
+	move[17].push_back(Marker::B);
+	move[18].push_back(Marker::C);
+	move[19].push_back(Marker::B);
+	move[20].push_back(Marker::C);
+
+	move[21].push_back(Marker::BL); move[21].push_back(Marker::BR);
+	move[22].push_back(Marker::FL); move[22].push_back(Marker::BR);
+	move[23].push_back(Marker::BL); move[23].push_back(Marker::FR);
+	move[24].push_back(Marker::B);
+	move[25].push_back(Marker::BL); move[25].push_back(Marker::BR);
+	move[26].push_back(Marker::FL); move[26].push_back(Marker::BR);
+	move[27].push_back(Marker::BL); move[27].push_back(Marker::FR);
+
+
+	move[28].push_back(Marker::C);
+	move[29].push_back(Marker::SL); move[29].push_back(Marker::FR);
+	move[30].push_back(Marker::FL); move[30].push_back(Marker::SR);
+	move[31].push_back(Marker::SL); move[31].push_back(Marker::FR);
+	move[32].push_back(Marker::FL); move[32].push_back(Marker::SR);
+	move[33].push_back(Marker::FL); move[33].push_back(Marker::FR);
+	move[34].push_back(Marker::BL); move[34].push_back(Marker::BR);
+
+	move[35].push_back(Marker::C);
+	move[36].push_back(Marker::B);
+	move[37].push_back(Marker::C);
+	move[38].push_back(Marker::B);
+	move[39].push_back(Marker::FL); move[39].push_back(Marker::FR);
+	move[40].push_back(Marker::FL); move[40].push_back(Marker::FR);
+	move[41].push_back(Marker::C);
+	move[42].push_back(Marker::B);
+
+	move[43].push_back(Marker::SL); move[43].push_back(Marker::FR);
+	move[44].push_back(Marker::FL); move[44].push_back(Marker::SR);
+	move[45].push_back(Marker::SL); move[45].push_back(Marker::FR);
+	move[46].push_back(Marker::FL); move[46].push_back(Marker::SR);
+	move[47].push_back(Marker::FL); move[47].push_back(Marker::BR);
+	move[48].push_back(Marker::BL); move[48].push_back(Marker::FR);
+	move[49].push_back(Marker::C);
+	move[50].push_back(Marker::C);
+
+	move[51].push_back(Marker::BL); move[51].push_back(Marker::BR);
+	move[52].push_back(Marker::FL); move[52].push_back(Marker::BR);
+	move[53].push_back(Marker::BL); move[53].push_back(Marker::FR);
+	move[54].push_back(Marker::B);
+	move[55].push_back(Marker::BL); move[55].push_back(Marker::BR);
+	move[56].push_back(Marker::FL); move[56].push_back(Marker::BR);
+	move[57].push_back(Marker::BL); move[57].push_back(Marker::FR);
+
+	move[58].push_back(Marker::C);
+	move[59].push_back(Marker::FL); move[59].push_back(Marker::FR);
+	move[60].push_back(Marker::BL); move[60].push_back(Marker::BR);
+	move[61].push_back(Marker::FL); move[61].push_back(Marker::FR);
+	move[62].push_back(Marker::BL); move[62].push_back(Marker::BR);
+	move[63].push_back(Marker::SL);
+	move[64].push_back(Marker::SR);
+	move[65].push_back(Marker::SL);
+	move[66].push_back(Marker::SR);
+	move[67].push_back(Marker::B);
+	move[68].push_back(Marker::C);
+
+	move[69].push_back(Marker::C);
+	move[70].push_back(Marker::C);
+	move[71].push_back(Marker::BL); move[71].push_back(Marker::BR);
+	move[73].push_back(Marker::C);
+	move[74].push_back(Marker::BL); move[74].push_back(Marker::BR);
+	move[75].push_back(Marker::C);
+	move[76].push_back(Marker::BL); move[76].push_back(Marker::BR);
 
 	//Ici on remplit les images des choregraphies
-	/*imagesMove.push_back(2);
+	imagesMove.push_back(2);
+	imagesMove.push_back(2);
+	imagesMove.push_back(4);
+	imagesMove.push_back(4);
+	imagesMove.push_back(5);
+	imagesMove.push_back(5);
+	imagesMove.push_back(4);
+	imagesMove.push_back(4);
+	imagesMove.push_back(2);
+	imagesMove.push_back(2);
+
+	imagesMove.push_back(3);
+	imagesMove.push_back(6);
+	imagesMove.push_back(6);
+	imagesMove.push_back(7);
+	imagesMove.push_back(7);
+	imagesMove.push_back(3);
+	imagesMove.push_back(2);
+
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
+
+	imagesMove.push_back(10);
+	imagesMove.push_back(11);
+	imagesMove.push_back(12);
+	imagesMove.push_back(2);
+	imagesMove.push_back(10);
+	imagesMove.push_back(11);
+	imagesMove.push_back(12);
+
+	imagesMove.push_back(2);
+	imagesMove.push_back(8);
+	imagesMove.push_back(9);
+	imagesMove.push_back(8);
+	imagesMove.push_back(9);
+	imagesMove.push_back(4);
+	imagesMove.push_back(5);
+	imagesMove.push_back(4);
+	imagesMove.push_back(5);
+
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
+	imagesMove.push_back(4);
+	imagesMove.push_back(4);
 	imagesMove.push_back(2);
 	imagesMove.push_back(3);
+
+	imagesMove.push_back(8);
+	imagesMove.push_back(9);
+	imagesMove.push_back(8);
+	imagesMove.push_back(9);
+	imagesMove.push_back(11);
+	imagesMove.push_back(12);
 	imagesMove.push_back(2);
+	imagesMove.push_back(2);
+
+	imagesMove.push_back(10);
+	imagesMove.push_back(11);
+	imagesMove.push_back(12);
+	imagesMove.push_back(2);
+	imagesMove.push_back(10);
+	imagesMove.push_back(11);
+	imagesMove.push_back(12);
+
+	imagesMove.push_back(2);
+	imagesMove.push_back(4);
+	imagesMove.push_back(5);
+	imagesMove.push_back(4);
+	imagesMove.push_back(5);
+	imagesMove.push_back(6);
+	imagesMove.push_back(7);
+	imagesMove.push_back(6);
+	imagesMove.push_back(7);
 	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
+
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
+	imagesMove.push_back(10);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
+	imagesMove.push_back(10);
 	imagesMove.push_back(2);
-	imagesMove.push_back(3);
-	imagesMove.push_back(2);
-	imagesMove.push_back(3);
-	imagesMove.push_back(2);
-	imagesMove.push_back(3);*/
+	imagesMove.push_back(10);
 }
 
 void Application::checkPosition()
